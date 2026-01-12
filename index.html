@@ -1,23 +1,680 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="shortcut icon" type="image/x-icon" href="data:image/x-icon;,">
-    <link rel="stylesheet" href="style.css">
-    <title>zetwin</title>
+	<meta charset="utf-8">
+	<title>Zetwin - Web Developer Portfolio, Ukraine, Kyiv, Lviv</title>
+	<meta name="description"
+		content="Web Developer Portfolio, UX and UI Design, front-end, back-end and UX, WordPress development Ukraine, Kyiv, Lviv / HTML JS PHOTOSHOP PHP MySQL">
+
+	<link rel="stylesheet" href="assets/css/style.css">
+	<link rel="stylesheet" href="assets/css/magnific-popup.css">
+	<link href="https://fonts.googleapis.com/css?family=Roboto:100,300&amp;subset=cyrillic" rel="stylesheet">
+	<!-- jQuery 1.7.2+ or Zepto.js 1.0+ -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="assets/js/jquery.magnific-popup.min.js"></script>
+
+	<link rel="apple-touch-icon" sizes="152x152" href="assets/favicons/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="assets/favicons/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="assets/favicons/favicon-16x16.png">
+	<link rel="manifest" href="assets/favicons/site.webmanifest">
+	<link rel="mask-icon" href="assets/favicons/safari-pinned-tab.svg" color="#5bbad5">
+	<link rel="shortcut icon" href="assets/favicons/favicon.ico">
+	<meta name="msapplication-TileColor" content="#da532c">
+	<meta name="msapplication-config" content="assets/favicons/browserconfig.xml">
+	<meta name="theme-color" content="#d9dade">
+
+	<meta property="og:title" content="Zetwin - Web Developer, Ukraine, Kyiv, Lviv" />
+	<meta property="og:description"
+		content="Web Developer Portfolio, UX and UI Design, front-end, back-end and UX, WordPress development Ukraine, Kyiv, Lviv / HTML JS Photoshop PHP MySQL" />
+	<meta property="og:image" content="assets/favicons/fb.jpg" />
 </head>
+
 <body>
-    <section class="first-section">
-        <h1>Zetwin</h1>
-        <h2>Skills</h2>
-        <ul>
-            <li>html</li>
-            <li>php</li>
-            <li>js</li>
-        </ul>
-        <a href="comments-wall.html">Leave a comment</a>
-    </section>
+
+
+
+
+
+	<div class="head">
+		<div class="video-background">
+			<div class="video-foreground">
+				<div id="playerid"></div>
+			</div>
+		</div>
+		<div id="autoplay-trigger"
+			style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:transparent;cursor:default;">
+		</div>
+		<script src="https://www.youtube.com/iframe_api"></script>
+		<script>
+			var player;
+			var autoplayTriggered = false;
+
+			function onYouTubeIframeAPIReady() {
+				player = new YT.Player("playerid", {
+					height: "100%",
+					width: "100%",
+					playerVars: {
+						listType: "playlist",
+						list: "PLDZjMr0wZw_72PLFoBfVJm9Cad69vyDoB",
+						autoplay: 1,
+						mute: 1,
+						controls: 0,
+						rel: 0,
+						loop: 1,
+						modestbranding: 1,
+						playsinline: 1,
+						iv_load_policy: 3,
+						disablekb: 1,
+						fs: 0
+					},
+					events: {
+						onReady: onPlayerReady,
+						onStateChange: onPlayerStateChange
+					}
+				});
+			}
+
+			// For playlist: shuffle and start from random video
+			var playlistStarted = false;
+
+			function onPlayerReady(event) {
+				event.target.mute();
+				event.target.setVolume(0);
+				event.target.setShuffle(true);  // Enable shuffle for playlist
+
+				// Wait for playlist to load, then jump to random video
+				setTimeout(function () {
+					var playlist = event.target.getPlaylist();
+					if (playlist && playlist.length > 0) {
+						var randomIndex = Math.floor(Math.random() * playlist.length);
+						event.target.playVideoAt(randomIndex);
+						playlistStarted = true;
+					} else {
+						event.target.playVideo();
+					}
+				}, 500);
+
+				setTimeout(function () {
+					var trigger = document.getElementById("autoplay-trigger");
+					if (trigger) {
+						trigger.style.display = "none";
+						autoplayTriggered = true;
+					}
+				}, 3000);
+			}
+
+			function onPlayerStateChange(event) {
+				if (event.data === YT.PlayerState.ENDED) {
+					player.playVideo();
+				}
+			}
+
+			// Interaction triggers
+			var trigger = document.getElementById("autoplay-trigger");
+			if (trigger) {
+				trigger.addEventListener("mouseover", function () {
+					if (player && player.playVideo && !autoplayTriggered) {
+						player.mute();
+						player.setVolume(0);
+						player.playVideo();
+						autoplayTriggered = true;
+						setTimeout(function () { trigger.style.display = "none"; }, 1000);
+					}
+				}, { once: true });
+
+				setTimeout(function () {
+					var event = new MouseEvent("mouseover", { view: window, bubbles: true, cancelable: true });
+					trigger.dispatchEvent(event);
+				}, 500);
+			}
+
+			var interactionEvents = ["click", "touchstart", "scroll", "mousemove", "keydown"];
+			var playOnInteraction = function () {
+				if (player && player.playVideo) {
+					player.mute();
+					player.setVolume(0);
+					player.playVideo();
+					var trigger = document.getElementById("autoplay-trigger");
+					if (trigger) trigger.style.display = "none";
+				}
+			};
+
+			interactionEvents.forEach(function (eventType) {
+				document.addEventListener(eventType, playOnInteraction, { once: true, passive: true });
+			});
+		</script>
+
+		<div class="left">
+			<h1>Zetwin</h1>
+			<span class="sub-title">Web Developer</span>
+			<div class="contacts">
+				<a href="https://www.facebook.com/zetwin" target="_blank"><img class="icon icons8-Facebook" width="32"
+						height="32"
+						src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABUElEQVRYR2NkGGDAOMD2M4w6AGsI2AZsKWBiYIxnYGQwoEoU/We48J+BYcGhDd4T0c3DcADYckbGfqpYjGbIv///Cw9v8JmALIzhAPvALRcYGBj1aeEAhv8MFw5u8DYk4ICt/2liOdTQg+u9UTyNJQTId4CEKCeDuBgn3P13739i+PLtD4p/aOaAnCQthhAfBRTLCmpPMFy4+o72DjDQFmKY0GyBEXN0c0BCuCoDCIPAi9ffGRasuM3w4tU3hjv0igKQ70GhAAKgIAf5HBegSRoYMAcgW4zNxzRPA4Qc4BOzi7bZEJT1VBT5wJiHiwUcCKB8D0p8IIAtLQyvNACL9wFLhKMOGA2B4RoCpDfJVBT4GHi4oQXR1z8Mdx5ACiJM8P/iwfU+KA1dOjdKGQMPb/DagLdNCJKEtIwZEqjXOP1/8d9/pgZ0y0F2jfaMRkMAABU67CERwsxbAAAAAElFTkSuQmCC"></a>
+				<a href="https://telegram.me/zetwin" target="_blank"><img class="icon icons8-Telegram-App" width="32"
+						height="32"
+						src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACnklEQVRYR+2W4XFTQQyEdysAKoAOgA6SCggVABVAKgAqIFQAqYCkAkgHpANSAU4FYr430pvz+Zw8k8n4TzTjsX2+d1qtdnW29hzec349ALhXBiLimaQ3kt5Keizp2Pb3tu33AiAiDiS9l3TUaWxl+8m9AIgIKnwl6ZMkKq84lfRL0jdJ17bZN8edGUiaP2a1dfiVJKg+sb2KCJj4IenCNuzcHUAeCs3tgRck7vscEbACyM+2+fx/AJJmkiKqovla0hnU2/7DybnvwDbrfOed9ryutUKwqAUR8SJFReIKaD7Jile1mAKk31Q7KT4iAPZU0kvbvxczEBEkpGIAVJxnbxHWHFk1iQ9pSyXK9b9stL1R8MZC490P6V2eheYS1URzl5y99Jjz5uRZPRr5ORLgBKqhjp5+6bx7mdWuDY/mGZihat4BuZY8AZQAv9oG6Fq0AKpPbMC7qHmN5iYxdqPiOhCgRyXCjp0S4LveHT0DBYCkVHyOhwd042mYKheQnMo39t4mwB4AgkPVj5qkoOeF8Kgaulvf35acZ7YKcA1AouUBKuSFb9ugwnaMMnSgfVj5EgFuAOh6V2Do8/MOzKntdib0nZq+NxNwKMAbATSCqzleS1e228tmmDwBoCWu46EAFwHIg6LJMl8ozIyR8hvwTD3YO9zmqKWjuKzE2ROdOZ4ZMLiGCkeOmYCPJmCBXAqAfuMA4jiTkrxESaWAmOd83gnsubTdjvK1li0FMNsphxQOYY2BxeHQDAPzX66IQLzMixsFuwhA6qD6WRVMB+dlw/xAbATCg6VaAxSfh7ELgNYNG7bKm7MGGVMVhnhtFeBiFzSqnnrZ3+nd7zBQc4Nx3v8x3V0DW40++CFbUkCHl1n72OIW7AJil70PAPbOwD97sCUwan3HBQAAAABJRU5ErkJggg=="></a>
+				<a href="https://www.linkedin.com/in/zetwin" target="_blank"><svg class="icon" width="32" height="32"
+						viewBox="0 0 24 24" fill="#0077b5" style="vertical-align: middle;">
+						<path
+							d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764 0-.974.784-1.764 1.75-1.764.971 0 1.75.79 1.75 1.764 0 .974-.779 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v2.834c1.396-2.586 7-2.777 7 2.476v5.69z" />
+					</svg></a>
+				<a href="https://github.com/zetwin" target="_blank"><svg class="icon" width="32" height="32"
+						viewBox="0 0 24 24" fill="#ffffff" style="vertical-align: middle;">
+						<path
+							d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+					</svg></a>
+				<i class="dog">@</i> zetwin@gmail.com
+			</div>
+		</div>
+
+		<div class="ava"></div>
+
+		<div class="skills">
+			<span>html</span>
+			<span>css</span>
+			<span>js</span>
+			<span>php</span>
+		</div>
+	</div>
+
+	<div class="projects">
+		<h2 class="subtitle">Projects</h2>
+		<a href="http://foodup.pp.ua/landing/" target="_blank"><span class="project-image"
+				style="    background-image: url(assets/images/foodup.jpg);"></span>FoodUp</a>
+		<a href="http://leadland.pp.ua/" target="_blank"><span class="project-image"
+				style="    background-image: url(assets/images/leadland.jpg)"></span>ЛидЛенд</a>
+		<a href="http://bon.pp.ua/" target="_blank"><span class="project-image"
+				style="    background-image: url(assets/images/bon.jpg)"></span>Bon</a>
+		<!--
+		<a href="http://var.pp.ua/" target="_blank"><span class="project-image" style="    background-image: url(assets/images/var.png);"></span>Var</a>
+		<a href="http://motobike.pp.ua/" target="_blank"><span class="project-image" style="    background-image: url(assets/images/motobike.jpg);"></span>Motobike</a>
+		-->
+		<a href="#"
+			style="opacity: 0.15;    filter: grayscale(100%);    cursor: default;    pointer-events: none;"><span
+				class="project-image"
+				style="    background-image: url(assets/images/proteplo.jpg);"></span>Pro-teplo</a>
+		<a href="#"
+			style="opacity: 0.15;    filter: grayscale(100%);    cursor: default;    pointer-events: none;"><span
+				class="project-image" style="    background-image: url(assets/images/ecogym.jpg);"></span>eGym</a>
+	</div>
+
+	<div class="works">
+		<h2 class="subtitle">Works</h2>
+
+		<div class="work">
+			<!--a href="/blog/foodup"><span class="work-image" style="background-image:url(assets/images/fb-post2.300x200s.jpg);"></span>FoodUp</a-->
+			<h3>FoodUp</h3>
+			<p>
+			<p class="footer-text">Електронне меню та система замовлення їжі з&nbsp;доставкою на дім для ресторанів,
+				кафе, барів, фастфудів.</p>
+			</p>
+			<a href="assets/images/fb-post2.jpg" title="fb-post2.jpg"><span class="work-image"
+					style="background-image:url(assets/images/fb-post2.300x200s.jpg);"></span></a>
+			<a href="assets/images/fb-post.jpg" title="fb-post.jpg"><span class="work-image"
+					style="background-image:url(assets/images/fb-post.300x200s.jpg);"></span></a>
+			<a href="assets/images/fb-post_pocket.jpg" title="fb-post_pocket.jpg"><span class="work-image"
+					style="background-image:url(assets/images/fb-post_pocket.300x200s.jpg);"></span></a>
+			<a href="assets/images/food-head.png" title="food-head.png"><span class="work-image"
+					style="background-image:url(assets/images/food-head.300x200s.png);"></span></a>
+			<a href="assets/images/fb-post_pink.jpg" title="fb-post_pink.jpg"><span class="work-image"
+					style="background-image:url(assets/images/fb-post_pink.300x200s.jpg);"></span></a>
+			<a href="assets/images/fb-screens.jpg" title="fb-screens.jpg"><span class="work-image"
+					style="background-image:url(assets/images/fb-screens.300x200s.jpg);"></span></a>
+			<a href="assets/images/foodler.jpg" title="foodler.jpg"><span class="work-image"
+					style="background-image:url(assets/images/foodler.300x200s.jpg);"></span></a>
+		</div>
+		<div class="work">
+			<!--a href="/blog/veb-dizajn"><span class="work-image" style="background-image:url(assets/images/artboard-1.300x200s.png);"></span>Веб дизайн</a-->
+			<h3>Веб дизайн</h3>
+			<p></p>
+			<a href="assets/images/artboard-1.png" title="artboard-1.png"><span class="work-image"
+					style="background-image:url(assets/images/artboard-1.300x200s.png);"></span></a>
+			<a href="assets/images/artboard-2.png" title="artboard-2.png"><span class="work-image"
+					style="background-image:url(assets/images/artboard-2.300x200s.png);"></span></a>
+			<a href="assets/images/artboard-3.jpg" title="artboard-3.jpg"><span class="work-image"
+					style="background-image:url(assets/images/artboard-3.300x200s.jpg);"></span></a>
+			<a href="assets/images/bez-imeni-2.jpg" title="bez-imeni-2.jpg"><span class="work-image"
+					style="background-image:url(assets/images/bez-imeni-2.300x200s.jpg);"></span></a>
+			<a href="assets/images/var.jpg" title="var.jpg"><span class="work-image"
+					style="background-image:url(assets/images/var.300x200s.jpg);"></span></a>
+			<a href="assets/images/posts-list.jpg" title="posts-list.jpg"><span class="work-image"
+					style="background-image:url(assets/images/posts-list.300x200s.jpg);"></span></a>
+			<a href="assets/images/leadland-octopus.jpg" title="leadland-octopus.jpg"><span class="work-image"
+					style="background-image:url(assets/images/leadland-octopus.300x200s.jpg);"></span></a>
+			<a href="assets/images/ilendos-copy.jpg" title="ilendos-copy.jpg"><span class="work-image"
+					style="background-image:url(assets/images/ilendos-copy.300x200s.jpg);"></span></a>
+			<a href="assets/images/ilendos.jpg" title="ilendos.jpg"><span class="work-image"
+					style="background-image:url(assets/images/ilendos.300x200s.jpg);"></span></a>
+			<a href="assets/images/konvektors.jpg" title="konvektors.jpg"><span class="work-image"
+					style="background-image:url(assets/images/konvektors.300x200s.jpg);"></span></a>
+			<a href="assets/images/vitamins.jpg" title="vitamins.jpg"><span class="work-image"
+					style="background-image:url(assets/images/vitamins.300x200s.jpg);"></span></a>
+			<a href="assets/images/konvektors-main_cats.jpg" title="konvektors-main_cats.jpg"><span class="work-image"
+					style="background-image:url(assets/images/konvektors-main_cats.300x200s.jpg);"></span></a>
+			<a href="assets/images/widget-1.jpg" title="widget-1.jpg"><span class="work-image"
+					style="background-image:url(assets/images/widget-1.300x200s.jpg);"></span></a>
+			<a href="assets/images/lutsk-card.jpg" title="lutsk-card.jpg"><span class="work-image"
+					style="background-image:url(assets/images/lutsk-card.300x200s.jpg);"></span></a>
+			<a href="assets/images/water-delivery.jpg" title="water-delivery.jpg"><span class="work-image"
+					style="background-image:url(assets/images/water-delivery.300x200s.jpg);"></span></a>
+			<a href="assets/images/konvektors_head2.jpg" title="konvektors_head2.jpg"><span class="work-image"
+					style="background-image:url(assets/images/konvektors_head2.300x200s.jpg);"></span></a>
+			<a href="assets/images/simplapsd.jpg" title="simplapsd.jpg"><span class="work-image"
+					style="background-image:url(assets/images/simplapsd.300x200s.jpg);"></span></a>
+		</div>
+		<div class="work">
+			<!--a href="/blog/bannery"><span class="work-image" style="background-image:url(assets/images/banner-2.300x200s.jpg);"></span>Баннеры</a-->
+			<h3>Баннеры</h3>
+			<p></p>
+			<a href="assets/images/banner-2.jpg" title="banner-2.jpg"><span class="work-image"
+					style="background-image:url(assets/images/banner-2.300x200s.jpg);"></span></a>
+			<a href="assets/images/banner-4.jpg" title="banner-4.jpg"><span class="work-image"
+					style="background-image:url(assets/images/banner-4.300x200s.jpg);"></span></a>
+			<a href="assets/images/banner-1.jpg" title="banner-1.jpg"><span class="work-image"
+					style="background-image:url(assets/images/banner-1.300x200s.jpg);"></span></a>
+			<a href="assets/images/banner-3.jpg" title="banner-3.jpg"><span class="work-image"
+					style="background-image:url(assets/images/banner-3.300x200s.jpg);"></span></a>
+			<a href="assets/images/banner-5.jpg" title="banner-5.jpg"><span class="work-image"
+					style="background-image:url(assets/images/banner-5.300x200s.jpg);"></span></a>
+			<a href="assets/images/geralt.jpg" title="geralt.jpg"><span class="work-image"
+					style="background-image:url(assets/images/geralt.300x200s.jpg);"></span></a>
+		</div>
+		<div class="work">
+			<!--a href="/blog/bannery-sportpit"><span class="work-image" style="background-image:url(assets/images/vitamin-banners.300x200s.png);"></span>Баннеры "Спортпит"</a-->
+			<h3>Баннеры "Спортпит"</h3>
+			<p></p>
+			<a href="assets/images/vitamin-banners.png" title="vitamin-banners.png"><span class="work-image"
+					style="background-image:url(assets/images/vitamin-banners.300x200s.png);"></span></a>
+			<a href="assets/images/banner_4.jpg" title="banner_4.jpg"><span class="work-image"
+					style="background-image:url(assets/images/banner_4.300x200s.jpg);"></span></a>
+			<a href="assets/images/banner-3.png" title="banner-3.png"><span class="work-image"
+					style="background-image:url(assets/images/banner-3.300x200s.png);"></span></a>
+			<a href="assets/images/banner_1.jpg" title="banner_1.jpg"><span class="work-image"
+					style="background-image:url(assets/images/banner_1.300x200s.jpg);"></span></a>
+			<a href="assets/images/banner_2.jpg" title="banner_2.jpg"><span class="work-image"
+					style="background-image:url(assets/images/banner_2.300x200s.jpg);"></span></a>
+			<a href="assets/images/banner_3.jpg" title="banner_3.jpg"><span class="work-image"
+					style="background-image:url(assets/images/banner_3.300x200s.jpg);"></span></a>
+			<a href="assets/images/banner-3_1.png" title="banner-3_1.png"><span class="work-image"
+					style="background-image:url(assets/images/banner-3_1.300x200s.png);"></span></a>
+			<a href="assets/images/banner-1.png" title="banner-1.png"><span class="work-image"
+					style="background-image:url(assets/images/banner-1.300x200s.png);"></span></a>
+			<a href="assets/images/banner-2.png" title="banner-2.png"><span class="work-image"
+					style="background-image:url(assets/images/banner-2.300x200s.png);"></span></a>
+		</div>
+		<div class="work">
+			<!--a href="/blog/napolnit-bassejn-vodoj"><span class="work-image" style="background-image:url(assets/images/pool.300x200s.jpg);"></span>Наполнить бассейн водой</a-->
+			<h3>Наполнить бассейн водой</h3>
+			<p>
+			<p>Задача: наполнить старый, заброшеный бассейн Припяти водой. Инструменты Photoshop.</p>
+			</p>
+			<a href="assets/images/pool.jpg" title="pool.jpg"><span class="work-image"
+					style="background-image:url(assets/images/pool.300x200s.jpg);"></span></a>
+			<a href="assets/images/tech-designer-ua-3.jpg" title="tech-designer-ua-3.jpg"><span class="work-image"
+					style="background-image:url(assets/images/tech-designer-ua-3.300x200s.jpg);"></span></a>
+		</div>
+		<div class="work">
+			<!--a href="/blog/logotipy"><span class="work-image" style="background-image:url(assets/images/konvektors-logo2.300x200s.jpg);"></span>Логотипы</a-->
+			<h3>Логотипы</h3>
+			<p></p>
+			<a href="assets/images/konvektors-logo2.jpg" title="konvektors-logo2.jpg"><span class="work-image"
+					style="background-image:url(assets/images/konvektors-logo2.300x200s.jpg);"></span></a>
+			<a href="assets/images/konvisom.jpg" title="konvisom.jpg"><span class="work-image"
+					style="background-image:url(assets/images/konvisom.300x200s.jpg);"></span></a>
+			<a href="assets/images/teplonlogo3d.jpg" title="teplonlogo3d.jpg"><span class="work-image"
+					style="background-image:url(assets/images/teplonlogo3d.300x200s.jpg);"></span></a>
+		</div>
+		<div class="work">
+			<!--a href="/blog/long-shadows-flat-practice"><span class="work-image" style="background-image:url(assets/images/50.300x200s.png);"></span>Long shadows, flat practice</a-->
+			<h3>Long shadows, flat practice</h3>
+			<p></p>
+			<a href="assets/images/50.png" title="50.png"><span class="work-image"
+					style="background-image:url(assets/images/50.300x200s.png);"></span></a>
+			<a href="assets/images/0.png" title="0.png"><span class="work-image"
+					style="background-image:url(assets/images/0.300x200s.png);"></span></a>
+			<a href="untitled-1.gif" title="untitled-1.gif"><span class="work-image"
+					style="background-image:url(untitled-1.300x200s.gif);"></span></a>
+			<a href="assets/images/zetwin.png" title="zetwin.png"><span class="work-image"
+					style="background-image:url(assets/images/zetwin.300x200s.png);"></span></a>
+			<a href="assets/images/edward.png" title="edward.png"><span class="work-image"
+					style="background-image:url(assets/images/edward.300x200s.png);"></span></a>
+			<a href="assets/images/edward-norton-500x333.png" title="edward-norton-500x333.png"><span class="work-image"
+					style="background-image:url(assets/images/edward-norton-500x333.300x200s.png);"></span></a>
+			<a href="assets/images/banana_bond.png" title="banana_bond.png"><span class="work-image"
+					style="background-image:url(assets/images/banana_bond.300x200s.png);"></span></a>
+			<a href="2012-11-11-13.50.png" title="2012-11-11-13.50.png"><span class="work-image"
+					style="background-image:url(assets/images/2012-11-11-13.50.300x200s.png);"></span></a>
+			<a href="assets/images/x_ca203588.png" title="x_ca203588.png"><span class="work-image"
+					style="background-image:url(assets/images/x_ca203588.300x200s.png);"></span></a>
+			<a href="assets/images/123.png" title="123.png"><span class="work-image"
+					style="background-image:url(assets/images/123.300x200s.png);"></span></a>
+			<a href="assets/images/1---0016.png" title="1---0016.png"><span class="work-image"
+					style="background-image:url(assets/images/1---0016.300x200s.png);"></span></a>
+			<a href="assets/images/images.jpg" title="images.jpg"><span class="work-image"
+					style="background-image:url(assets/images/images.300x200s.jpg);"></span></a>
+			<a href="assets/images/zagruzhennoe.png" title="zagruzhennoe.png"><span class="work-image"
+					style="background-image:url(assets/images/zagruzhennoe.300x200s.png);"></span></a>
+		</div>
+		<div class="work">
+			<!--a href="/blog/tisnenie-v-ps"><span class="work-image" style="background-image:url(assets/images/user5.300x200s.png);"></span>Тиснение в PS</a-->
+			<h3>Тиснение в PS</h3>
+			<p>
+			<p>Просто игрался в фотошопе с тенями свечением и дошел до такой комбинации стилей.</p>
+			</p>
+			<a href="assets/images/user5.png" title="user5.png"><span class="work-image"
+					style="background-image:url(assets/images/user5.300x200s.png);"></span></a>
+			<a href="assets/images/user2.png" title="user2.png"><span class="work-image"
+					style="background-image:url(assets/images/user2.300x200s.png);"></span></a>
+			<a href="assets/images/user3.png" title="user3.png"><span class="work-image"
+					style="background-image:url(assets/images/user3.300x200s.png);"></span></a>
+			<a href="assets/images/user4.png" title="user4.png"><span class="work-image"
+					style="background-image:url(assets/images/user4.300x200s.png);"></span></a>
+			<a href="assets/images/appstr.png" title="appstr.png"><span class="work-image"
+					style="background-image:url(assets/images/appstr.300x200s.png);"></span></a>
+			<a href="assets/images/bo.png" title="bo.png"><span class="work-image"
+					style="background-image:url(assets/images/bo.300x200s.png);"></span></a>
+		</div>
+	</div>
+
+
+	<div class="examples">
+		<h2>Some Practice</h2>
+
+		<div class="bluezet">
+			<div class="container">
+				<div class="image">
+					<p><img src="assets/images/zetwin-mika.png"></p>
+					<p><img src="assets/images/zetwin1.png"></p>
+					<p><img src="assets/images/zetwin2.png"></p>
+				</div>
+				<span>Zetwin</span>
+
+				<ul class="zetblue-skills">
+					<li>Html</li>
+					<li>JS</li>
+					<li>CSS</li>
+					<li>Photoshop</li>
+					<li>PHP</li>
+					<li>MySQL</li>
+				</ul>
+				<div class="characteristics">
+					<ul class="positive">
+						<li>Аккуратность</li>
+						<li>Креативность</li>
+						<li>Усидчивость</li>
+						<li>Честность</li>
+						<li>Aвтоматизация (лень)</li>
+					</ul>
+					<ul class="negative">
+						<!-- <li>Самостоятельное завершение задач</li>-->
+						<li>....</li>
+					</ul>
+				</div>
+			</div>
+
+
+			<!--img src="assets/images/Group.png"-->
+		</div>
+
+
+
+		<div class="studio">
+			<link href="https://fonts.googleapis.com/css?family=Noto+Serif:400,700&amp;subset=latin,cyrillic"
+				rel="stylesheet" type="text/css">
+			<div class="studio_hero">
+				<div class="studio_ipad"></div>
+				<div class="studio_text">
+					<h2>Panda</h2>
+					<p>Разработка веб-сайтов интернет-магазинов лендингов</p>
+					<span href="/catalog/portfolio" class="studio_button studio_portfolio">Портфолио</span><span
+						class="studio_button studio_prices">Цены</span>
+				</div>
+			</div>
+			<div class="studio_block_portfolio">
+				<h2>Портфолио</h2>
+				<div>
+					<span class="title">Сайт компании</span>
+					<span class="price">$ 200</span>
+				</div>
+				<div>
+					<span class="title">Лендинг</span>
+					<span class="price">$ 100</span>
+				</div>
+				<div>
+					<span class="title">Интернет-магазин</span>
+					<span class="price">$ 500</span>
+					<span class="order">Заказать</span>
+				</div>
+			</div>
+
+			<div class="studio_block_prices">
+				<h2>Расценки</h2>
+
+				<div>
+
+					<span class="title">Интернет-магазин</span>
+					<span class="price">$ 500</span>
+					<span class="order">Заказать</span>
+				</div>
+				<div>
+
+					<span class="title">Лендинг</span>
+					<span class="price">$ 100</span>
+					<span class="order">Заказать</span>
+				</div>
+				<div>
+
+					<span class="title">Сайт компании</span>
+					<span class="price">$ 200</span>
+					<span class="order">Заказать</span>
+				</div>
+			</div>
+
+
+			<script>
+				$(function () {
+					$(".studio_prices").on("click", function () { //Click
+						$(".studio_block_prices").slideToggle("slow", function () {
+							if ($(this).is(":visible")) { //Check to see if element is visible then scroll to it
+								$('html, body').animate({ //animate the scroll
+									scrollTop: $(this).offset().top - 25 // the - 25 is to stop the scroll 25px above the element
+								}, "slow")
+							}
+						});
+						return false; //This works similarly to event.preventDefault(); as it stops the default link behavior
+					});
+				});
+			</script>
+
+		</div>
+
+
+
+		<div class="octopus">
+			<div class="hero_octopus_1">
+				<a href="/" class="logo"></a>
+
+				<span class="octopus_title">Octopus</span>
+				<p class="services">Разработка лендингов, интернет магазинов, корпоративных сайтов, визиток. Брендинг.
+					Парсинг и наполнение.</p>
+
+				<nav>
+					<a href="/#">Каталог</a>
+					<a href="/#">Статьи</a>
+					<a href="/#">Работы</a>
+					<a href="/#">Контакты</a>
+				</nav>
+
+				<div class="team">
+					<span>Наша команда</span>
+					<i class="join_team">+</i>
+					<a href="#" class="team_member"><img src="assets/images/terdery.png"></a>
+					<a href="#" class="team_member"><img
+							src="https://mir-s3-cdn-cf.behance.net/user/276/1842291.547f30acdd1fc.jpg"></a>
+				</div>
+			</div>
+		</div>
+
+
+
+
+
+
+		<div class="row_grid h-2">
+			<div class="col-1-3">
+				<div class="first" style="
+    background-image: url(http://www.cosmo.com.ua/i/publications/1020/830_550/luchshie-trevel-blogeri-v-instagram-1838-48531.jpg);
+    background-size: cover;
+    background-position: 50% 78%;
+    height: 100%;
+    /* display: table; */
+">
+					<span class="title"> </span>
+				</div>
+			</div>
+			<div>
+				<div class="second">
+					<div class="title">Dior<span class="sub_title">Be proud to your style</span></div>
+				</div>
+			</div>
+		</div>
+
+
+
+		<div class="row_grid">
+			<div>
+				<div style="
+    background: url(https://sayanchaga.com/wp-content/uploads/2015/05/How-Does-Chaga-Tea-Taste1.jpg);
+    background-size: cover;
+    background-position: -121% 0;">
+
+				</div>
+			</div>
+			<div class="col-1-3">
+				<ul class="domains_archive">
+					<h2>Архив доменов</h2>
+					<li><a href="http://var.pp.ua" target="_blank">var.pp.ua</a></li>
+					<li><a href="http://variable.pp.ua" target="_blank">variable.pp.ua</a></li>
+					<li><a href="http://motobike.pp.ua" target="_blank">motobike.pp.ua</a></li>
+					<li><a href="http://bon.pp.ua" target="_blank">bon.pp.ua</a></li>
+					<li><a href="http://leadland.pp.ua" target="_blank">leadland.pp.ua</a></li>
+					<li><a href="http://vh-all.pp.ua/terdery/" target="_blank">vh-all.pp.ua/terdery/</a></li>
+				</ul>
+			</div>
+
+		</div>
+
+		<div class="row_grid  h-2">
+			<div>
+
+			</div>
+		</div>
+	</div>
+
+	<div class="footer">
+		<h2>Contacts</h2>
+		<a href="https://telegram.me/zetwin" target="_blank" style="display: inline-block; margin: 0 10px;"><img
+				src="assets/images/Telegram_logo.svg" width="48" height="48" alt="Telegram"></a>
+		<a href="https://www.facebook.com/zetwin" target="_blank" style="display: inline-block; margin: 0 10px;"><img
+				src="assets/images/F_icon.svg" width="48" height="48" alt="Facebook"></a>
+		<a href="https://www.linkedin.com/in/zetwin" target="_blank" style="display: inline-block; margin: 0 10px;"><svg
+				width="48" height="48" viewBox="0 0 24 24" fill="#0077b5" style="vertical-align: middle;">
+				<path
+					d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764 0-.974.784-1.764 1.75-1.764.971 0 1.75.79 1.75 1.764 0 .974-.779 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v2.834c1.396-2.586 7-2.777 7 2.476v5.69z" />
+			</svg></a>
+		<a href="https://github.com/zetwin" target="_blank" style="display: inline-block; margin: 0 10px;"><svg
+				width="48" height="48" viewBox="0 0 24 24" fill="#ffffff" style="vertical-align: middle;">
+				<path
+					d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+			</svg></a>
+		<a href="mailto:zetwin@gmail.com" target="_blank" style="display: inline-block; margin: 0 10px;"><img
+				src="assets/images/New_Logo_Gmail.svg" width="48" height="48" alt="Email"></a>
+		<h2 style="margin: 40px 0;">zetwin@gmail.com</h2>
+	</div>
+
+
+
+	<script>
+		$(function () {
+			$('.container .image p:gt(0)').hide();
+			setInterval(function () { $('.container .image > :first-child').fadeOut(2500).next('p').fadeIn(4000).end().appendTo('.container .image'); }, 10000);
+		});
+	</script>
+	<script>
+		$(document).ready(function () {
+			$('.works').magnificPopup({
+				delegate: 'a',
+				type: 'image',
+				tLoading: 'Loading image #%curr%...',
+				mainClass: 'mfp-img-mobile',
+				gallery: {
+					enabled: true,
+					navigateByImgClick: true,
+					preload: [0, 1] // Will preload 0 - before current, and 1 after the current image
+				},
+				image: {
+					tError: '<a href="%url%">The image #%curr%</a> could not be loaded.',
+					titleSrc: function (item) {
+						return item.el.attr('title') + '<small>by zetwin</small>';
+					}
+				}
+			});
+		});
+	</script>
+	<script>
+		var documentTitle = document.title;
+		var frame = document.getElementById("playerid");
+
+		function onBlur() {
+			frame.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+		};
+		function onFocus() {
+			frame.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+		};
+
+		if (/*@cc_on!@*/false) { // check for Internet Explorer
+			document.onfocusin = onFocus;
+			document.onfocusout = onBlur;
+		} else {
+			window.onfocus = onFocus;
+			window.onblur = onBlur;
+		}
+	</script>
+
+	<!-- Yandex.Metrika counter -->
+	<script type="text/javascript">
+		(function (d, w, c) {
+			(w[c] = w[c] || []).push(function () {
+				try {
+					w.yaCounter42010874 = new Ya.Metrika({
+						id: 42010874,
+						clickmap: true,
+						trackLinks: true,
+						accurateTrackBounce: true,
+						webvisor: true
+					});
+				} catch (e) { }
+			});
+
+			var n = d.getElementsByTagName("script")[0],
+				s = d.createElement("script"),
+				f = function () { n.parentNode.insertBefore(s, n); };
+			s.type = "text/javascript";
+			s.async = true;
+			s.src = "https://cdn.jsdelivr.net/npm/yandex-metrica-watch/watch.js";
+
+			if (w.opera == "[object Opera]") {
+				d.addEventListener("DOMContentLoaded", f, false);
+			} else { f(); }
+		})(document, window, "yandex_metrika_callbacks");
+	</script>
+	<noscript>
+		<div><img src="https://mc.yandex.ru/watch/42010874" style="position:absolute; left:-9999px;" alt="" /></div>
+	</noscript>
+	<!-- /Yandex.Metrika counter -->
+
 </body>
+
 </html>
