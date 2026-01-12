@@ -726,12 +726,29 @@ ul.domains_archive h2 {
 
 .video-foreground, .video-background iframe {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 50%;
+    left: 50%;
+    width: 100vw;
+    height: 56.25vw; /* 16:9 aspect ratio */
+    min-height: 100%;
+    min-width: 177.78vh; /* 16:9 aspect ratio */
+    transform: translate(-50%, -50%);
     pointer-events: none;
     opacity: 0.5;
+}
+
+@media (min-aspect-ratio: 16/9) {
+    .video-foreground, .video-background iframe {
+        height: 100%;
+        width: 177.78vh;
+    }
+}
+
+@media (max-aspect-ratio: 16/9) {
+    .video-foreground, .video-background iframe {
+        width: 100%;
+        height: 56.25vw;
+    }
 }
 
 .footer {
@@ -762,18 +779,4 @@ ul.domains_archive h2 {
     max-width: 100%;
     max-width: 48px;
     display: block;
-}
-
-@media (min-aspect-ratio: 1/1) {
-    .video-foreground {
-        height: 300%;
-        top: -100%;
-    }
-}
-
-@media (max-aspect-ratio: 1/1) {
-    .video-foreground {
-        width: 300%;
-        left: -100%;
-    }
 }
