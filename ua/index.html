@@ -338,8 +338,6 @@
 					style="background-image:url(../assets/images/50.300x200s.png);"></span></a>
 			<a href="../assets/images/0.png" title="0.png"><span class="work-image"
 					style="background-image:url(../assets/images/0.300x200s.png);"></span></a>
-			<a href="../untitled-1.gif" title="untitled-1.gif"><span class="work-image"
-					style="background-image:url(../untitled-1.300x200s.gif);"></span></a>
 			<a href="../assets/images/zetwin.png" title="zetwin.png"><span class="work-image"
 					style="background-image:url(../assets/images/zetwin.300x200s.png);"></span></a>
 			<a href="../assets/images/edward.png" title="edward.png"><span class="work-image"
@@ -627,10 +625,14 @@
 		var frame = document.getElementById("playerid");
 
 		function onBlur() {
-			frame.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+			if (frame && frame.contentWindow) {
+				frame.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+			}
 		};
 		function onFocus() {
-			frame.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+			if (frame && frame.contentWindow) {
+				frame.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+			}
 		};
 
 		if (/*@cc_on!@*/false) {
