@@ -78,22 +78,54 @@ i.dog {
 }
 
 .skills {
-    font-size: 4em;
-    font-weight: 100;
     position: absolute;
-    color: rgba(0, 0, 0, 0.7);
-    color: rgba(255, 255, 255, 0.7);
-    left: 50%;
-    top: 50%;
-    margin-left: 260px;
-    -webkit-transform: translateY(-50%);
-    -moz-transform: translateY(-50%);
-    -ms-transform: translateY(-50%);
-    transform: translateY(-50%);
+    left: 62%;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to bottom,
+        transparent 0%,
+        rgba(0,0,0,0.05) 12%,
+        rgba(0,0,0,0.3)  22%,
+        rgba(0,0,0,0.7)  32%,
+        black            42%,
+        black            58%,
+        rgba(0,0,0,0.7)  68%,
+        rgba(0,0,0,0.3)  78%,
+        rgba(0,0,0,0.05) 88%,
+        transparent 100%);
+    mask-image: linear-gradient(to bottom,
+        transparent 0%,
+        rgba(0,0,0,0.05) 12%,
+        rgba(0,0,0,0.3)  22%,
+        rgba(0,0,0,0.7)  32%,
+        black            42%,
+        black            58%,
+        rgba(0,0,0,0.7)  68%,
+        rgba(0,0,0,0.3)  78%,
+        rgba(0,0,0,0.05) 88%,
+        transparent 100%);
 }
 
-.skills span {
-    display: block;
+.skills-drum {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+@media (max-width: 768px) {
+    .skills {
+        position: relative;
+        left: auto;
+        right: auto;
+        top: auto;
+        bottom: auto;
+        width: 100%;
+        height: 220px;
+    }
 }
 
 h2.subtitle {
@@ -107,6 +139,117 @@ h2.subtitle {
 .projects {
     text-align: center;
     margin-bottom: 45px;
+}
+
+/* SKILLSET SECTION */
+.skillset {
+    padding: 70px 40px;
+    background: #fff;
+    text-align: center;
+}
+
+.skillset > .subtitle {
+    margin-bottom: 50px;
+}
+
+.skillset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    max-width: 1140px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.skillset-card {
+    background: #fafbfc;
+    border-radius: 12px;
+    padding: 24px 26px;
+    border-left: 3px solid #ddd;
+    border: 1px solid #eaecef;
+    border-left: 3px solid #ddd;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+
+.skillset-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.skillset-card:nth-child(1)  { border-left-color: #29b6f6; }
+.skillset-card:nth-child(2)  { border-left-color: #66bb6a; }
+.skillset-card:nth-child(3)  { border-left-color: #ff7043; }
+.skillset-card:nth-child(4)  { border-left-color: #ab47bc; }
+.skillset-card:nth-child(5)  { border-left-color: #ffca28; }
+.skillset-card:nth-child(6)  { border-left-color: #26c6da; }
+.skillset-card:nth-child(7)  { border-left-color: #ef5350; }
+.skillset-card:nth-child(8)  { border-left-color: #9ccc65; }
+.skillset-card:nth-child(9)  { border-left-color: #ec407a; }
+.skillset-card:nth-child(10) { border-left-color: #ffa726; }
+
+.skillset-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.skillset-icon {
+    font-size: 1.4em;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.skillset-card h3 {
+    font-size: 12px;
+    font-weight: 600;
+    color: #444;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.skillset-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.skillset-tags span {
+    display: inline-block;
+    background: #f0f2f5;
+    color: #555;
+    font-size: 12px;
+    font-weight: 400;
+    padding: 4px 11px;
+    border-radius: 4px;
+    line-height: 1.5;
+    border: 1px solid #e4e6ea;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    cursor: default;
+}
+
+.skillset-tags span:hover {
+    background: #333;
+    color: #fff;
+    border-color: #333;
+}
+
+@media (max-width: 768px) {
+    .skillset {
+        padding: 50px 20px;
+    }
+    .skillset-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+}
+
+@media (max-width: 500px) {
+    .skillset-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /*PROJECTS */
@@ -135,6 +278,7 @@ h2.subtitle {
 .works {
     margin: auto;
     width: 960px;
+    padding-top: 45px;
 }
 
 .works h3 {

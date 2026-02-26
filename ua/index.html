@@ -162,7 +162,7 @@
 
 		<div class="left">
 			<h1>Zetwin</h1>
-			<span class="sub-title">Веб-розробник</span>
+			<span class="sub-title">Lead Software Engineer</span>
 			<div class="contacts">
 				<a href="https://www.facebook.com/zetwin" target="_blank"><img class="icon icons8-Facebook" width="32"
 						height="32"
@@ -187,10 +187,7 @@
 		<div class="ava"></div>
 
 		<div class="skills">
-			<span>html</span>
-			<span>css</span>
-			<span>js</span>
-			<span>php</span>
+			<div class="skills-drum" id="skills-drum"></div>
 		</div>
 	</div>
 
@@ -209,6 +206,97 @@
 		<a href="#"
 			style="opacity: 0.15;    filter: grayscale(100%);    cursor: default;    pointer-events: none;"><span
 				class="project-image" style="    background-image: url(../assets/images/ecogym.jpg);"></span>eGym</a>
+	</div>
+
+	<div class="skillset">
+		<h2 class="subtitle">Навички</h2>
+		<div class="skillset-grid">
+
+			<div class="skillset-card">
+				<div class="skillset-card-header"><div class="skillset-icon">🌐</div><h3>Веб</h3></div>
+				<div class="skillset-tags">
+					<span>HTML5</span><span>CSS3</span><span>JavaScript (ES6+)</span>
+					<span>PHP</span><span>REST API</span><span>JSON</span><span>WebSockets</span>
+				</div>
+			</div>
+
+			<div class="skillset-card">
+				<div class="skillset-card-header"><div class="skillset-icon">⚛️</div><h3>Frontend</h3></div>
+				<div class="skillset-tags">
+					<span>React</span><span>React Hooks</span><span>React Bootstrap</span>
+					<span>Tailwind CSS</span><span>Адаптивний дизайн</span>
+					<span>UI/UX</span><span>Анімації</span><span>Компонентна архітектура</span>
+				</div>
+			</div>
+
+			<div class="skillset-card">
+				<div class="skillset-card-header"><div class="skillset-icon">🧠</div><h3>Backend &amp; API</h3></div>
+				<div class="skillset-tags">
+					<span>Node.js</span><span>FastAPI</span><span>Python</span>
+					<span>BFF архітектура</span><span>Дизайн API</span>
+					<span>Авторизація</span><span>Rate Limiting</span>
+				</div>
+			</div>
+
+			<div class="skillset-card">
+				<div class="skillset-card-header"><div class="skillset-icon">🗄️</div><h3>Бази даних</h3></div>
+				<div class="skillset-tags">
+					<span>PostgreSQL</span><span>Redis</span><span>MySQL</span>
+					<span>Проектування схем</span><span>Кешування</span>
+				</div>
+			</div>
+
+			<div class="skillset-card">
+				<div class="skillset-card-header"><div class="skillset-icon">⚡</div><h3>Real-Time системи</h3></div>
+				<div class="skillset-tags">
+					<span>Real-Time системи</span><span>Low-Latency</span>
+					<span>Індикатори</span><span>Event Triggers</span>
+					<span>Лідерборди</span>
+				</div>
+			</div>
+
+			<div class="skillset-card">
+				<div class="skillset-card-header"><div class="skillset-icon">☁️</div><h3>DevOps &amp; Інфра</h3></div>
+				<div class="skillset-tags">
+					<span>NGINX</span><span>Linux</span><span>VPS</span>
+					<span>Cloudflare API</span><span>CI/CD</span>
+					<span>DNS Автоматизація</span>
+				</div>
+			</div>
+
+			<div class="skillset-card">
+				<div class="skillset-card-header"><div class="skillset-icon">🔐</div><h3>Безпека</h3></div>
+				<div class="skillset-tags">
+					<span>Безпека API</span><span>Моніторинг</span>
+					<span>Self-Healing системи</span><span>Логування</span>
+				</div>
+			</div>
+
+			<div class="skillset-card">
+				<div class="skillset-card-header"><div class="skillset-icon">🧩</div><h3>Системне мислення</h3></div>
+				<div class="skillset-tags">
+					<span>Системна архітектура</span><span>Масштабованість</span>
+					<span>Автоматизація</span><span>Developer Experience</span>
+				</div>
+			</div>
+
+			<div class="skillset-card">
+				<div class="skillset-card-header"><div class="skillset-icon">🤖</div><h3>AI / Автоматизація</h3></div>
+				<div class="skillset-tags">
+					<span>AI інструменти</span><span>LLM Workflows</span>
+					<span>Автоматизація контенту</span><span>Data-to-Insight</span>
+				</div>
+			</div>
+
+			<div class="skillset-card">
+				<div class="skillset-card-header"><div class="skillset-icon">💡</div><h3>Лідерство</h3></div>
+				<div class="skillset-tags">
+					<span>Tech Lead</span><span>Product Vision</span>
+					<span>Менторство</span><span>User Empathy</span>
+				</div>
+			</div>
+
+		</div>
 	</div>
 
 	<div class="works">
@@ -675,6 +763,106 @@
 		<div><img src="https://mc.yandex.ru/watch/42010874" style="position:absolute; left:-9999px;" alt="" /></div>
 	</noscript>
 	<!-- /Yandex.Metrika counter -->
+
+	<script>
+	(function() {
+		var drum = document.getElementById('skills-drum');
+		if (!drum) return;
+
+		var tags = [
+			'System Design','API Design','Team Leadership','Architecture',
+			'Node.js','React','TypeScript','Python','PostgreSQL','Docker','CI/CD',
+			'JavaScript','PHP','REST API','WebSockets','Redis','MySQL',
+			'NGINX','Linux','Cloudflare','Next.js','FastAPI',
+			'BFF Architecture','Real-Time Systems','Event-Driven','Scalability',
+			'AWS','VPS','GraphQL','AI Tooling','Monitoring','Git',
+			'Tailwind CSS','SASS/SCSS','RabbitMQ','Rate Limiting',
+			'LLM Workflows','Automation','DX','Figma'
+		];
+
+		var SLOT_H = 36;
+		var totalH   = tags.length * SLOT_H;
+		var duration = tags.length * 0.9;
+
+		var list = document.createElement('div');
+		list.id = 'skills-list';
+
+		var allTags = tags.concat(tags);
+		allTags.forEach(function(tag) {
+			var item = document.createElement('div');
+			item.className = 'skills-item';
+			item.textContent = tag;
+			item.style.height = SLOT_H + 'px';
+			item.style.lineHeight = SLOT_H + 'px';
+			list.appendChild(item);
+		});
+
+		drum.appendChild(list);
+
+		var style = document.createElement('style');
+		style.textContent = [
+			'#skills-list {',
+			'  position: absolute;',
+			'  left: 0; right: 0; top: 0;',
+			'  animation: drumScroll ' + duration + 's linear infinite;',
+			'  will-change: transform;',
+			'}',
+			'#skills-list:hover { animation-play-state: paused; }',
+			'@keyframes drumScroll {',
+			'  0%   { transform: translateY(0); }',
+			'  100% { transform: translateY(-' + totalH + 'px); }',
+			'}',
+			'.skills-item {',
+			'  display: block;',
+			'  padding-left: 20px;',
+			'  white-space: nowrap;',
+			'  box-sizing: border-box;',
+			'  font-size: 1em;',
+			'  opacity: 0.25;',
+			'  color: #fff;',
+			'  font-weight: 300;',
+			'  transition: font-size 0.12s ease, opacity 0.12s ease;',
+			'  will-change: font-size, opacity;',
+			'}'
+		].join('\n');
+		document.head.appendChild(style);
+
+		var itemEls   = list.querySelectorAll('.skills-item');
+		var lastFrame = 0;
+		var interval  = 1000 / 30;
+
+		list.addEventListener('mouseenter', function() {
+			list.style.animationPlayState = 'paused';
+		});
+		list.addEventListener('mouseleave', function() {
+			list.style.animationPlayState = 'running';
+		});
+
+		function updateDepth(ts) {
+			requestAnimationFrame(updateDepth);
+			if (ts - lastFrame < interval) return;
+			lastFrame = ts;
+
+			var skillsRect = drum.parentElement.getBoundingClientRect();
+			var centerY    = skillsRect.top + skillsRect.height / 2;
+			var maxDist    = SLOT_H * 3.2;
+
+			for (var i = 0; i < itemEls.length; i++) {
+				var r    = itemEls[i].getBoundingClientRect();
+				var mid  = r.top + r.height / 2;
+				var dist = Math.abs(mid - centerY);
+				var t    = Math.max(0, 1 - dist / maxDist);
+				var t2   = t * t;
+
+				itemEls[i].style.fontSize   = (0.78 + 0.82 * t2).toFixed(3) + 'em';
+				itemEls[i].style.opacity    = (0.08 + 0.92 * t2).toFixed(3);
+				itemEls[i].style.fontWeight = t > 0.85 ? '500' : '300';
+			}
+		}
+
+		requestAnimationFrame(updateDepth);
+	})();
+	</script>
 
 </body>
 
