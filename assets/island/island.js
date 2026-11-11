@@ -16,11 +16,14 @@
       nowPlaying: "Now playing", nothing: "Nothing playing right now", play: "Play", stop: "Stop",
       music: "Music", history: "Full history on Last.fm", follow: "Follow on Spotify",
       along: "Listen with me", alongOn: "Listening with me", alongNote: "Each song plays to the end, then your player switches to what I am playing.",
-      next: "Next", pressPlay: "Your browser blocked autoplay. Press play in the player.",
+      next: "Next", nextMine: "Up next, my song", pressPlay: "Your browser blocked autoplay. Press play in the player.",
       previewNote: "Sign in to Spotify in this browser for full songs.",
       openIn: "Open in",
       playMine: "Play my music", mineOn: "Playing my music", mineNote: "My playlists, shuffled. Keeps playing while you look around.",
-      pause: "Pause", resume: "Resume", mute: "Mute", silentNote: "Playing silently in sync with me. Press play on the notch to hear it."
+      pause: "Pause", resume: "Resume", mute: "Mute", silentNote: "Playing my song silently. Press play on the notch to hear it.",
+      previewLabel: "30-second preview, no ads", fullSong: "Full song", playingHere: "Playing here", fullHere: "Full song on YouTube", fullNote: "Full songs play on YouTube and may start with an ad. Its Skip button is in the player.",
+      noPreview: "No preview for this song.", playPreview: "Play preview", pausePreview: "Pause preview",
+      artist: "Artist", releases: "Releases", Single: "Single", EP: "EP", Album: "Album"
     },
     uk: {
       listeningOn: "Слухаю в", on: "У", listening: "Слухаю зараз", lastPlayed: "Востаннє грало",
@@ -28,11 +31,14 @@
       nowPlaying: "Зараз грає", nothing: "Зараз нічого не грає", play: "Слухати", stop: "Зупинити",
       music: "Музика", history: "Уся історія на Last.fm", follow: "Підписатися в Spotify",
       along: "Слухати разом", alongOn: "Слухаємо разом", alongNote: "Кожна пісня грає до кінця, далі плеєр перемикається на те, що слухаю я.",
-      next: "Далі", pressPlay: "Браузер заблокував автозапуск. Натисніть play у плеєрі.",
+      next: "Далі", nextMine: "Далі моя пісня", pressPlay: "Браузер заблокував автозапуск. Натисніть play у плеєрі.",
       previewNote: "Увійдіть у Spotify в цьому браузері, щоб слухати повністю.",
       openIn: "Відкрити в",
       playMine: "Увімкнути мою музику", mineOn: "Грає моя музика", mineNote: "Мої плейлисти вперемішку. Грають, поки ви гортаєте сторінку.",
-      pause: "Пауза", resume: "Продовжити", mute: "Вимкнути звук", silentNote: "Грає беззвучно разом зі мною. Натисніть play на острові, щоб почути."
+      pause: "Пауза", resume: "Продовжити", mute: "Вимкнути звук", silentNote: "Моя пісня грає беззвучно. Натисніть play на острові, щоб почути.",
+      previewLabel: "Уривок 30 секунд, без реклами", fullSong: "Повна пісня", playingHere: "Грає тут", fullHere: "Повна пісня на YouTube", fullNote: "Повні пісні грають на YouTube і можуть почати з реклами. Кнопка «Пропустити» є у плеєрі.",
+      noPreview: "Для цієї пісні немає уривка.", playPreview: "Слухати уривок", pausePreview: "Пауза",
+      artist: "Виконавець", releases: "Релізи", Single: "Сингл", EP: "EP", Album: "Альбом"
     }
   }[LANG];
   var SOURCE = { spotify: "Spotify", ytm: "YouTube Music" };
@@ -63,7 +69,11 @@
   var failed = {};
   try { failed = JSON.parse(sessionStorage.getItem("zi-failed") || "{}") || {}; } catch (e) { failed = {}; }
   function markFailed(id) { failed[id] = 1; try { sessionStorage.setItem("zi-failed", JSON.stringify(failed)); } catch (e) {} }
-  function playable(t) { return !!(spotifyId(t) || (videoId(t) && !failed[videoId(t)])); }
+  /* Songs with no preview found (Deezer and iTunes both missed). */
+  var noPreview = {};
+  function hasFull(t) { return !!(spotifyId(t) || (videoId(t) && !failed[videoId(t)])); }
+  function playable(t) { return !!t && (!noPreview[trackKey(t)] || hasFull(t)); }
+  function previewable(t) { return !!t && !noPreview[trackKey(t)]; }
   function trackUrl(t) {
     var u = safeUrl(t.url);
     if (u) return u;
@@ -143,18 +153,20 @@
   }
 
   /* ---------- Playback event, so the page can move in time with the visitor's music.
-     document.addEventListener("zi:playback", e => e.detail) -> { playing, muted, title, artist, art, color, accent }
+     document.addEventListener("zi:playback", e => e.detail) -> { playing, muted, title, artist, art, color, accent, bpm }
      playing is true only while the visitor can hear music. The silent in-sync player sends playing:false, muted:true. ---------- */
-  var lastEmit = "";
+  var lastEmit = "", emitSeq = 0, bpmCache = {};
   function emit(playing) {
-    var t = S.playing && S.playing.track;
-    if (!t) { if (lastEmit && lastEmit.charAt(0) === "1") { lastEmit = "0"; fire({ playing: false }); } return; }
-    var muted = !!S.playing.muted, audible = !!playing && !muted;
-    var key = (audible ? "1" : "0") + (muted ? "m" : "") + trackKey(t);
+    var t = S.playing && S.playing.track, seq = ++emitSeq;
+    if (!t) { if (lastEmit && lastEmit.charAt(0) === "1") { lastEmit = "0"; fire({ playing: false, muted: false }); } return; }
+    var muted = !!S.playing.muted, audible = !!playing && !muted, bpm = bpmCache[trackKey(t)] || null;
+    var key = (audible ? "1" : "0") + (muted ? "m" : "") + (bpm || "") + trackKey(t);
     if (key === lastEmit) return;
     lastEmit = key;
+    /* Colours resolve asynchronously; only the newest emit may fire, so a stale "playing" never wins. */
     colorFor(t).then(function (c) {
-      fire({ playing: audible, muted: muted, title: t.title, artist: t.artist, art: safeUrl(t.art) || "", color: c.tint, accent: c.art });
+      if (seq !== emitSeq) return;
+      fire({ playing: audible, muted: muted, title: t.title, artist: t.artist, art: safeUrl(t.art) || "", color: c.tint, accent: c.art, bpm: bpm });
     });
   }
   function fire(detail) {
@@ -196,15 +208,16 @@
   /* My music for visitors when I am not listening: every playable song from my playlists. */
   function pool() {
     var out = [], seen = {};
-    S.lists.forEach(function (l) { l.tracks.forEach(function (t) { var k = trackKey(t); if (playable(t) && !seen[k]) { seen[k] = 1; out.push(t); } }); });
+    S.lists.forEach(function (l) { l.tracks.forEach(function (t) { var k = trackKey(t); if (previewable(t) && !seen[k]) { seen[k] = 1; out.push(t); } }); });
     return out;
   }
   /* The one-tap control on the closed notch. */
   function quickState() {
+    if (S.playing && S.playing.paused) return { icon: PLAY, label: TEXT.resume };
     if (S.playing && S.playing.muted) return { icon: PLAY, label: TEXT.along };
     if (S.playing && S.playing.along) return { icon: PAUSE, label: TEXT.mute };
     if (S.playing) return S.playing.paused ? { icon: PLAY, label: TEXT.resume } : { icon: PAUSE, label: TEXT.pause };
-    if (isPlaying() && playable(current())) return { icon: PLAY, label: TEXT.along };
+    if (isPlaying() && previewable(current())) return { icon: PLAY, label: TEXT.along };
     if (pool().length) return { icon: PLAY, label: TEXT.playMine };
     return null;
   }
@@ -251,6 +264,21 @@
       '<span class="zi-hd-artist">' + esc(t.artist) + "</span></div>" + (isPlaying() ? bars() : "") + "</div>" + progressHtml() + alongHtml();
   }
   function listName(l) { return (LANG === "uk" && l.name_uk) || l.name; }
+  /* An artist I like: picture, links to the real artist pages, and the releases as a row of covers. */
+  function artistHtml(l) {
+    var links = l.links || {}, out = [];
+    if (safeUrl(links.apple)) out.push('<a href="' + esc(links.apple) + '" target="_blank" rel="noopener">Apple Music</a>');
+    if (safeUrl(links.spotify)) out.push('<a href="' + esc(links.spotify) + '" target="_blank" rel="noopener">Spotify</a>');
+    if (safeUrl(links.ytm)) out.push('<a href="' + esc(links.ytm) + '" target="_blank" rel="noopener">YouTube Music</a>');
+    var rel = (l.releases || []).map(function (r) {
+      return '<a class="zi-release" href="' + esc(safeUrl(r.url) || "#") + '" target="_blank" rel="noopener">' + art(r, "zi-art-rel") +
+        '<span class="zi-release-t">' + esc(r.title) + '</span><span class="zi-release-m">' + esc((TEXT[r.type] || r.type || "") + (r.year ? ", " + r.year : "")) + "</span></a>";
+    }).join("");
+    return '<div class="zi-artist">' + (safeUrl(l.picture) ? '<img class="zi-artist-pic" src="' + esc(l.picture) + '" alt="" loading="lazy">' : "") +
+      '<div class="zi-artist-text"><span class="zi-artist-name">' + esc(l.name) + '</span><span class="zi-artist-meta">' + esc(TEXT.artist + (l.genre ? ", " + l.genre : "")) + "</span></div></div>" +
+      (out.length ? '<div class="zi-artist-links">' + out.join("") + "</div>" : "") +
+      (rel ? '<div class="zi-releases" role="list" aria-label="' + esc(TEXT.releases) + '">' + rel + "</div>" : "");
+  }
   function rowsHtml(list, li) {
     return list.tracks.map(function (t, i) {
       return '<div class="zi-row">' + art(t, "zi-art-sm") +
@@ -315,8 +343,9 @@
     else if (p.along) html += note(TEXT.alongNote);
     if (p.mode === "shuffle") html += note(TEXT.mineNote);
     var next = upNext();
-    if (next) html += note(TEXT.next + ": " + next.title + ", " + next.artist);
-    if (spotifyId(p.track) && !videoId(p.track)) html += note(TEXT.previewNote);
+    if (next) html += note((next === current() && isPlaying() ? TEXT.nextMine : TEXT.next) + ": " + next.title + ", " + next.artist);
+    if (p.source === "full") html += note(TEXT.fullNote);
+    if (p.missing) html += note(TEXT.noPreview, "zi-player-warn");
     box.insertAdjacentHTML("beforeend", html);
   }
   function destroyPlayers(keep) {
@@ -327,6 +356,7 @@
   function stopPlayer() {
     emit(false);
     destroyPlayers();
+    stopAudio();
     S.playing = null;
     S.alongMine = "";
     S.shuffle = null;
@@ -336,12 +366,14 @@
   }
   function pausePlayer() {
     if (!S.playing) return;
-    try { if (yt.player && yt.player.pauseVideo) yt.player.pauseVideo(); else if (sp.ctrl) sp.ctrl.pause(); } catch (e) {}
+    if (S.playing.source === "preview") { if (au) au.pause(); }
+    else { try { if (yt.player && yt.player.pauseVideo) yt.player.pauseVideo(); else if (sp.ctrl) sp.ctrl.pause(); } catch (e) {} }
     setPaused(true);
   }
   function resumePlayer() {
     if (!S.playing) return;
-    try { if (yt.player && yt.player.playVideo) yt.player.playVideo(); else if (sp.ctrl) sp.ctrl.resume(); } catch (e) {}
+    if (S.playing.source === "preview") { if (au && au.src) playAudio(); }
+    else { try { if (yt.player && yt.player.playVideo) yt.player.playVideo(); else if (sp.ctrl) sp.ctrl.resume(); } catch (e) {} }
     setPaused(false);
   }
   function setPaused(paused) {
@@ -370,7 +402,7 @@
   function peekShuffle() {
     var q = S.shuffle, i;
     if (!q) return null;
-    for (i = S.shuffleAt; i < q.length; i++) if (playable(q[i])) return q[i];
+    for (i = S.shuffleAt; i < q.length; i++) if (previewable(q[i])) return q[i];
     return null;
   }
   function nextShuffle() {
@@ -388,7 +420,7 @@
     S.shuffle = shuffled(pool());
     S.shuffleAt = 0;
     var t = nextShuffle();
-    if (t) startPlayer(t, refFor(t), false, 0, "shuffle");
+    if (t) playPreview(t, refFor(t), "shuffle", false, false);
   }
 
   /* Where a track sits in my playlists, so the queue can continue from it. */
@@ -406,7 +438,7 @@
     var list = S.lists[at.li].tracks, n, j;
     for (n = 1; n <= list.length; n++) {
       j = (at.i + n) % list.length;
-      if (playable(list[j]) && trackKey(list[j]) !== trackKey(t)) return { track: list[j], ref: at.li + ":" + j };
+      if (previewable(list[j]) && trackKey(list[j]) !== trackKey(t)) return { track: list[j], ref: at.li + ":" + j };
     }
     return null;
   }
@@ -414,35 +446,213 @@
     var p = S.playing;
     if (!p) return null;
     if (p.along && mineIsNew()) return current();
+    if (switchToMine(p)) return current();
     if (p.mode === "shuffle") return peekShuffle();
     var n = nextInList(p.track);
     return n && n.track;
   }
+  /* A visitor on "Play my music" or a song they picked moves over to what I am playing once their song ends. */
+  function switchToMine(p) {
+    return !!p && !p.along && !p.muted && isPlaying() && previewable(current()) && trackKey(current()) !== trackKey(p.track);
+  }
   /* True when I have moved on to a song this visitor has not been given yet. */
   function mineIsNew() {
-    return isPlaying() && playable(current()) && trackKey(current()) !== S.alongMine;
+    return isPlaying() && previewable(current()) && trackKey(current()) !== S.alongMine;
   }
+  /* When a preview (or a full song) ends:
+     along: my new song if I moved on, otherwise keep going through my playlist until I do;
+     shuffle: the next shuffled song; a list: the next song in that list. */
   function onEnded() {
     var p = S.playing;
     if (!p) return;
-    if (p.along && mineIsNew()) {
-      startPlayer(current(), "now", true, alongStartSec(), null, p.muted);
-      return;
-    }
+    if (p.along && mineIsNew()) { playPreview(current(), "now", "along", p.muted, false); return; }
+    /* I started listening: the visitor's song has finished, so now they listen with me. */
+    if (switchToMine(p)) { playPreview(current(), "now", "along", false, false); return; }
     if (p.muted) { S.autoDone = trackKey(p.track); stopPlayer(); return; }
-    if (p.mode === "shuffle") {
+    if (p.along || p.mode === "shuffle") {
       var s2 = nextShuffle();
-      if (s2) startPlayer(s2, refFor(s2), false, 0, "shuffle"); else stopPlayer();
+      if (s2) playPreview(s2, p.along ? "now" : refFor(s2), p.along ? "along" : "shuffle", false, false); else stopPlayer();
       return;
     }
     var n = nextInList(p.track);
-    if (n) startPlayer(n.track, p.along ? "now" : n.ref, p.along, 0);
+    if (n) playPreview(n.track, n.ref, "list", false, false);
     else stopPlayer();
+  }
+
+  /* ---------- Ad-free previews in one <audio> element ----------
+     iOS only allows sound that starts inside a tap. Every tap calls unlock() first, which plays a silent clip on the
+     same element right away; the real preview URL arrives a moment later and plays on the already-unlocked element. */
+  var au = null, previewCache = {}, missRun = 0;
+  var SILENT = (function () {
+    var n = 800, b = new Uint8Array(44 + n), v = new DataView(b.buffer), i;
+    var w = function (o, str) { for (i = 0; i < str.length; i++) b[o + i] = str.charCodeAt(i); };
+    w(0, "RIFF"); v.setUint32(4, 36 + n, true); w(8, "WAVE"); w(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+    v.setUint16(22, 1, true); v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+    w(36, "data"); v.setUint32(40, n, true); for (i = 0; i < n; i++) b[44 + i] = 128;
+    var bin = ""; for (i = 0; i < b.length; i++) bin += String.fromCharCode(b[i]);
+    return "data:audio/wav;base64," + btoa(bin);
+  })();
+  function audioEl() {
+    if (au) return au;
+    au = new Audio();
+    au.preload = "auto";
+    au.setAttribute("playsinline", "");
+    au.addEventListener("playing", function () {
+      if (!S.playing || S.playing.source !== "preview" || au.src === SILENT) return;
+      missRun = 0;
+      S.playing.blocked = false;
+      if (S.playing.paused) setPaused(false); else emit(true);
+      setNotes(); syncPv(); refreshCompact();
+      measureBpm(S.playing.track, au.src);
+    });
+    au.addEventListener("pause", function () {
+      if (S.switching || au.ended || au.src === SILENT || !S.playing || S.playing.source !== "preview") return;
+      setPaused(true); syncPv();
+    });
+    au.addEventListener("ended", function () { if (au.src !== SILENT && S.playing && S.playing.source === "preview") onEnded(); });
+    au.addEventListener("error", function () {
+      if (au.src === SILENT || !au.getAttribute("src") || !S.playing || S.playing.source !== "preview") return;
+      noPreview[trackKey(S.playing.track)] = 1;
+      skipMissing();
+    });
+    au.addEventListener("timeupdate", tickPreview);
+    return au;
+  }
+  function unlock() {
+    var a = audioEl();
+    if (!a.paused && a.src !== SILENT) return;
+    try { S.switching = true; a.muted = true; a.src = SILENT; var pr = a.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
+    S.switching = false;
+  }
+  function stopAudio() {
+    if (!au) return;
+    S.switching = true;
+    try { au.pause(); au.removeAttribute("src"); au.load(); } catch (e) {}
+    S.switching = false;
+  }
+  function playAudio() {
+    var pr = au.play();
+    if (pr && pr.catch) pr.catch(function () {
+      if (!S.playing || S.playing.source !== "preview") return;
+      /* Autoplay refused: show our own play button in the panel instead of staying silent. */
+      S.playing.blocked = true; S.playing.paused = true;
+      setNotes(); syncPv(); refreshCompact();
+      if (!S.playing.muted && S.view !== "full") { S.byHover = false; setView("full"); }
+    });
+  }
+  function previewOf(t) {
+    if (t.preview && safeUrl(t.preview)) return Promise.resolve(t.preview);
+    var k = trackKey(t);
+    if (!previewCache[k]) {
+      previewCache[k] = getJSON("/preview?artist=" + encodeURIComponent(t.artist || "") + "&title=" + encodeURIComponent(t.title || ""))
+        .then(function (d) { return (d && safeUrl(d.preview)) || ""; }, function () { delete previewCache[k]; return ""; });
+    }
+    return previewCache[k];
+  }
+  function skipMissing() {
+    if (!S.playing) return;
+    missRun++;
+    paint(false);
+    if (S.playing.single || missRun > 8) {
+      /* A song the visitor picked has no preview: say so and offer the full song. */
+      S.playing.missing = true; S.playing.paused = true;
+      renderPv(); setNotes(); refreshCompact();
+      return;
+    }
+    onEnded();
+  }
+  /* mode: "along" (my song), "shuffle", "list". single: the visitor picked exactly this song. */
+  function playPreview(t, ref, mode, muted, single) {
+    destroyPlayers();
+    S.playing = { ref: ref, track: t, along: mode === "along", mode: mode, muted: !!muted, paused: false, blocked: false, source: "preview", single: !!single, missing: false };
+    if (mode !== "shuffle" && mode !== "along") S.shuffle = null;
+    if (mode === "along" && trackKey(t) === trackKey(current())) S.alongMine = trackKey(t);
+    if (mode !== "along") S.alongMine = "";
+    var token = S.token = (S.token || 0) + 1;
+    renderPv(); setNotes(); refreshCompact();
+    previewOf(t).then(function (url) {
+      if (token !== S.token || !S.playing) return;
+      if (!url) { noPreview[trackKey(t)] = 1; skipMissing(); return; }
+      var a = audioEl();
+      S.switching = true;
+      a.muted = !!S.playing.muted;
+      a.src = url;
+      S.switching = false;
+      playAudio();
+      prefetchNext();
+    });
+  }
+  /* Look the next preview up early so the change between songs is instant. */
+  function prefetchNext() {
+    var n = upNext();
+    if (n && previewable(n)) previewOf(n);
+  }
+  function renderPv() {
+    var p = S.playing, box = slot();
+    if (!p || p.source !== "preview") return;
+    var full = hasFull(p.track) ? '<button class="zi-full-btn" type="button" data-fullsong>' + esc(TEXT.fullSong) + "</button>" : "";
+    /* The visitor's own player, labelled so it is never mistaken for what I am listening to. */
+    box.innerHTML = '<div class="zi-pv" role="group" aria-label="' + esc(TEXT.playingHere) + '">' + art(p.track, "zi-art-pv") +
+      '<div class="zi-pv-meta"><span class="zi-here">' + esc(TEXT.playingHere) + '</span><span class="zi-pv-title">' + esc(p.track.title) + '</span><span class="zi-pv-artist">' + esc(p.track.artist) + "</span></div>" +
+      '<button class="zi-pv-btn" type="button" data-pv></button>' + full +
+      '<div class="zi-pv-bar" aria-hidden="true"><b></b></div></div><p class="zi-pv-t">' + esc(TEXT.previewLabel) + "</p>";
+    syncPv();
+    size();
+  }
+  function syncPv() {
+    var b = slot().querySelector("[data-pv]");
+    if (!b || !S.playing) return;
+    var on = !S.playing.paused && !S.playing.missing;
+    b.innerHTML = on ? PAUSE : PLAY;
+    b.setAttribute("aria-label", on ? TEXT.pausePreview : TEXT.playPreview);
+    b.disabled = !!S.playing.missing;
+  }
+  function tickPreview() {
+    var bar = slot().querySelector(".zi-pv-bar b");
+    if (bar && au && au.duration) bar.style.width = Math.min(100, (au.currentTime / au.duration) * 100) + "%";
+  }
+  /* The full song: YouTube (or Spotify) in the panel, visible, so its own Skip ad button can be pressed. */
+  function playFull(t) {
+    stopAudio();
+    var p = S.playing || {};
+    var startSec = p.along && trackKey(t) === trackKey(current()) ? alongStartSec() : 0;
+    S.playing = { ref: p.ref || "full", track: t, along: !!p.along, mode: p.mode || "list", muted: false, paused: false, blocked: false, source: "full" };
+    if (S.view !== "full") { S.byHover = false; setView("full"); }
+    startPlayer(t, S.playing.ref, S.playing.along, startSec, S.playing.mode, false);
+  }
+
+  /* ---------- Tempo, measured from the preview while the visitor hears it ---------- */
+  function measureBpm(t, url) {
+    var k = trackKey(t);
+    if (k in bpmCache || !url || !window.OfflineAudioContext || (S.playing && S.playing.muted)) return;
+    bpmCache[k] = 0;
+    fetch(url).then(function (r) { return r.arrayBuffer(); }).then(function (buf) {
+      return new OfflineAudioContext(1, 1, 44100).decodeAudioData(buf);
+    }).then(function (audio) {
+      var sr = 11025, oc = new OfflineAudioContext(1, Math.floor(audio.duration * sr), sr);
+      var src = oc.createBufferSource(), lp = oc.createBiquadFilter();
+      src.buffer = audio; lp.type = "lowpass"; lp.frequency.value = 160;
+      src.connect(lp); lp.connect(oc.destination); src.start();
+      return oc.startRendering();
+    }).then(function (r) {
+      var d = r.getChannelData(0), hop = 128, fps = r.sampleRate / hop, n = Math.floor(d.length / hop), env = new Float32Array(n), on = new Float32Array(n), i, j, m = 0;
+      for (i = 0; i < n; i++) { var s2 = 0; for (j = 0; j < hop; j++) { var v = d[i * hop + j]; s2 += v * v; } env[i] = Math.sqrt(s2 / hop); }
+      for (i = 1; i < n; i++) { on[i] = Math.max(0, env[i] - env[i - 1]); m += on[i]; }
+      m /= n; for (i = 0; i < n; i++) on[i] -= m;
+      var ac = function (lag) { var l0 = Math.floor(lag), f = lag - l0, s3 = 0; for (var q = 0; q + l0 + 1 < n; q++) s3 += on[q] * (on[q + l0] * (1 - f) + on[q + l0 + 1] * f); return s3; };
+      var best = 0, bestScore = -Infinity, scores = {};
+      for (var b = 60; b <= 200; b += 0.5) { var lag = fps * 60 / b, sc = ac(lag) + 0.5 * ac(lag * 2) + 0.25 * ac(lag * 4); scores[b] = sc; if (sc > bestScore) { bestScore = sc; best = b; } }
+      /* Fold into the usual dance range when the double or half tempo scores almost as well. */
+      if (best < 85 && scores[best * 2] > 0.5 * bestScore) best *= 2;
+      if (best > 175 && scores[best / 2] > 0.5 * bestScore) best /= 2;
+      bpmCache[k] = Math.round(best);
+      if (S.playing && trackKey(S.playing.track) === k) emit(!S.playing.paused);
+    }).catch(function () { bpmCache[k] = 0; });
   }
 
   function startPlayer(t, ref, along, startSec, mode, muted) {
     var sid = spotifyId(t), vid = videoId(t), box = slot();
-    S.playing = { ref: ref, track: t, along: along, blocked: false, paused: false, muted: !!muted, mode: mode || (along ? "along" : "list") };
+    S.playing = { ref: ref, track: t, along: along, blocked: false, paused: false, muted: !!muted, mode: mode || (along ? "along" : "list"), source: "full" };
     if (S.playing.mode !== "shuffle") S.shuffle = null;
     if (along && trackKey(t) === trackKey(current())) S.alongMine = trackKey(t);
     if (!along) S.alongMine = "";
@@ -454,14 +664,17 @@
         yt.player.loadVideoById({ videoId: vid, startSeconds: Math.floor(startSec || 0) });
         watchStart();
       } else {
-        box.innerHTML = '<div class="zi-player zi-player-youtube"><div class="zi-yt-mount"></div></div>';
+        box.innerHTML = '<div class="zi-fullbox" role="group" aria-label="' + esc(TEXT.fullHere) + '"><div class="zi-player zi-player-youtube"><div class="zi-yt-mount"></div></div>' +
+          '<div class="zi-fullbox-meta"><span class="zi-here">' + esc(TEXT.fullHere) + '</span><span class="zi-pv-title">' + esc(t.title) + '</span><span class="zi-pv-artist">' + esc(t.artist) + "</span>" +
+          '<button class="zi-stop-btn" type="button" data-stop>' + STOP + "<span>" + esc(TEXT.stop) + "</span></button></div></div>";
         var mount = box.querySelector(".zi-yt-mount");
         var createYT = function (YT) {
           if (!mount.isConnected) return;
           yt.player = new YT.Player(mount, {
             host: "https://www.youtube-nocookie.com",
             videoId: vid,
-            width: "100%",
+            width: "200",
+            height: "200",
             playerVars: { autoplay: 1, playsinline: 1, rel: 0, mute: muted ? 1 : 0, start: Math.floor(startSec || 0), origin: location.origin },
             events: {
               onReady: function (e) { try { if (S.playing && S.playing.muted) e.target.mute(); e.target.playVideo(); } catch (x) {} watchStart(); },
@@ -596,7 +809,7 @@
     }).join("") + "</div>" : "";
     var list = lists[S.tab];
     var listUrl = list && safeUrl(list.url);
-    var head = list && (lists.length === 1 || listUrl) ? '<div class="zi-list-hd">' + (lists.length === 1 ? '<span class="zi-list-name"><span class="zi-fan zi-fan-sm" aria-hidden="true">' + list.tracks.slice(0, 3).map(function (t) { return art(t, "zi-art-fan"); }).join("") + "</span>" + esc(listName(list)) + "</span>" : "<span></span>") +
+    var head = list && list.kind === "artist" ? artistHtml(list) : list && (lists.length === 1 || listUrl) ? '<div class="zi-list-hd">' + (lists.length === 1 ? '<span class="zi-list-name"><span class="zi-fan zi-fan-sm" aria-hidden="true">' + list.tracks.slice(0, 3).map(function (t) { return art(t, "zi-art-fan"); }).join("") + "</span>" + esc(listName(list)) + "</span>" : "<span></span>") +
       (listUrl ? '<a href="' + esc(listUrl) + '" target="_blank" rel="noopener">' + esc(TEXT.openIn + " " + (SOURCE[list.source] || "")) + "</a>" : "") + "</div>" : "";
     return tabs + head + (list ? '<div class="zi-list" role="tabpanel">' + rowsHtml(list, S.lists.indexOf(list)) + "</div>" : "") + footHtml();
   }
@@ -673,7 +886,10 @@
   }
   function setMuted(m) {
     if (!S.playing) return;
-    try {
+    if (S.playing.source === "preview" && au) {
+      au.muted = m;
+      if (!m && au.paused && au.getAttribute("src")) playAudio();
+    } else try {
       if (yt.player) {
         if (m) yt.player.mute(); else { yt.player.unMute(); yt.player.setVolume(100); }
         if (!m && yt.player.getPlayerState && yt.player.getPlayerState() !== 1) yt.player.playVideo();
@@ -681,16 +897,17 @@
     } catch (e) {}
     S.playing.muted = m;
     S.playing.paused = false;
-    if (!m) { S.optOut = false; watchStart(); }
+    if (!m) { S.optOut = false; if (S.playing.source === "full") watchStart(); else measureBpm(S.playing.track, au && au.src); }
     emit(true);
     setNotes();
     refreshCompact();
   }
   function quickToggle() {
-    /* With me playing, the visitor's player already runs silently in sync: the notch only switches the sound. */
-    if (S.playing && S.playing.along) { setMuted(!S.playing.muted); return; }
+    /* With me playing, my song already plays silently: the notch only switches the sound. */
+    if (S.playing && S.playing.along && !S.playing.paused) { setMuted(!S.playing.muted); return; }
     if (S.playing) { if (S.playing.paused) resumePlayer(); else pausePlayer(); return; }
-    if (isPlaying() && playable(current())) startPlayer(current(), "now", true, alongStartSec());
+    unlock();
+    if (isPlaying() && previewable(current())) playPreview(current(), "now", "along", false, false);
     else startShuffle();
     schedule();
   }
@@ -698,7 +915,15 @@
     if (e.target.closest(".zi-quick")) { clearTimeout(hoverTimer); hoverTimer = null; quickToggle(); return; }
     S.byHover = false;
     if (e.target.closest("[data-mine]")) {
-      if (S.playing && S.playing.mode === "shuffle") stopPlayer(); else startShuffle();
+      if (S.playing && S.playing.mode === "shuffle") stopPlayer(); else { unlock(); startShuffle(); }
+      return;
+    }
+    if (e.target.closest("[data-fullsong]")) { if (S.playing) playFull(S.playing.track); schedule(); return; }
+    if (e.target.closest("[data-stop]")) { stopPlayer(); return; }
+    if (e.target.closest("[data-pv]")) {
+      if (!S.playing) return;
+      if (S.playing.paused || S.playing.blocked) { if (au && au.getAttribute("src")) { au.muted = false; S.playing.muted = false; playAudio(); } }
+      else pausePlayer();
       return;
     }
     if (e.target.closest(".zi-close")) { setView("compact"); el.hit.focus({ preventScroll: true }); return; }
@@ -712,7 +937,7 @@
     if (e.target.closest("[data-along]")) {
       if (S.playing && S.playing.along && S.playing.muted) setMuted(false);
       else if (S.playing && S.playing.along) { S.optOut = true; stopPlayer(); }
-      else if (isPlaying() && playable(current())) startPlayer(current(), "now", true, alongStartSec());
+      else if (isPlaying() && playable(current())) { unlock(); playPreview(current(), "now", "along", false, true); }
       schedule();
       return;
     }
@@ -721,7 +946,10 @@
       var ref = play.getAttribute("data-play");
       if (S.playing && !S.playing.along && S.playing.ref === ref) { stopPlayer(); return; }
       var p = ref.split(":"), t = S.lists[+p[0]] && S.lists[+p[0]].tracks[+p[1]];
-      if (t) startPlayer(t, ref, false, 0);
+      if (t) {
+        if (previewable(t)) { unlock(); playPreview(t, ref, "list", false, true); }
+        else { S.playing = { ref: ref, track: t, mode: "list" }; playFull(t); }
+      }
       schedule();
     }
   }
@@ -775,8 +1003,8 @@
       /* Listening along: an audible song is never cut (my new track plays next). The silent player follows me at once. */
       if (S.playing && S.playing.along && S.playing.muted) {
         if (!isPlaying()) stopPlayer();
-        else if (trackChanged && playable(current())) startPlayer(current(), "now", true, alongStartSec(), null, true);
-      } else if (trackChanged && S.playing && S.playing.along) setNotes();
+        else if (trackChanged && previewable(current())) playPreview(current(), "now", "along", true, false);
+      } else if (changed && S.playing) { setNotes(); prefetchNext(); }
       autoStart();
       if (S.view === "full" && !changed) { tick(); return; }
       paint(changed);
@@ -788,9 +1016,9 @@
   function autoStart() {
     if (S.playing || S.optOut || document.hidden || !isPlaying()) return;
     var t = current();
-    if (!videoId(t) || !playable(t) || trackKey(t) === S.autoDone) return;
+    if (!previewable(t) || trackKey(t) === S.autoDone) return;
     try { if (navigator.connection && navigator.connection.saveData) return; } catch (e) {}
-    startPlayer(t, "now", true, alongStartSec(), null, true);
+    playPreview(t, "now", "along", true, false);
     schedule();
   }
   function loadLists() {
@@ -804,19 +1032,17 @@
   function schedule() {
     clearTimeout(pollTimer);
     if (document.hidden) return;
-    pollTimer = setTimeout(function () { loadNow().then(schedule); }, S.playing && S.playing.along ? ALONG_POLL_MS : POLL_MS);
+    /* While a visitor is listening, check more often, so a change on my side reaches them quickly. */
+    pollTimer = setTimeout(function () { loadNow().then(schedule); }, S.playing ? ALONG_POLL_MS : POLL_MS);
   }
   document.addEventListener("visibilitychange", function () {
-    var silent = S.playing && S.playing.muted && yt.player;
+    var silent = S.playing && S.playing.muted && S.playing.source === "preview" && au;
     if (document.hidden) {
       clearTimeout(pollTimer);
-      if (silent) { try { yt.player.pauseVideo(); } catch (e) {} }
+      if (silent) { S.switching = true; au.pause(); S.switching = false; }
       return;
     }
-    if (silent) {
-      /* Back in view: jump to where I am now, or follow the track I moved on to. */
-      try { if (S.now && S.now.position != null) yt.player.seekTo(alongStartSec(), true); yt.player.playVideo(); } catch (e) {}
-    }
+    if (silent && au.getAttribute("src")) playAudio();
     loadNow().then(schedule);
   });
 

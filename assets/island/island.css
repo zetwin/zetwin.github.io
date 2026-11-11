@@ -108,7 +108,11 @@
 @keyframes zi-bar { from { transform: scaleY(.28); } to { transform: scaleY(1); } }
 
 /* Panel */
-.zi-full { width: min(404px, var(--zi-vw, 100vw)); padding: 14px 16px 16px; }
+.zi-full { width: min(404px, var(--zi-vw, 100vw)); padding: 14px 16px 16px; max-height: calc(var(--zi-vh, 100dvh) - 10px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+.zi-full::-webkit-scrollbar { display: none; }
+/* The artist header and releases take room, so the song list gives some back. */
+.zi-full:has(.zi-artist) .zi-list { max-height: max(140px, min(268px, calc(var(--zi-vh, 100dvh) - 520px))); }
+.zi-full:has(.zi-artist):has(.zi-pv) .zi-list { max-height: max(140px, min(268px, calc(var(--zi-vh, 100dvh) - 590px))); }
 .zi-close {
   position: absolute; top: 12px; right: 12px; z-index: 2;
   width: 32px; height: 32px; display: grid; place-items: center;
@@ -154,6 +158,44 @@ a.zi-hd-title:hover { text-decoration: underline; text-underline-offset: 2px; }
 .zi-along svg { width: 12px; height: 12px; }
 .zi-along[aria-pressed="true"] { background: var(--hover); color: var(--ink); }
 .zi-along:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+/* The visitor's own player: "Playing here", separate from what I am listening to */
+.zi-pv {
+  position: relative; display: flex; align-items: center; gap: 10px; margin-top: 14px;
+  padding: 10px 10px 13px; border-radius: 14px; background: rgba(0, 0, 0, .28); overflow: hidden;
+}
+.zi-art-pv { width: 44px; height: 44px; border-radius: 10px; }
+.zi-pv-meta, .zi-fullbox-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.zi-here { color: var(--art); font-size: 11.5px; font-weight: 600; letter-spacing: .01em; }
+.zi-pv-title { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zi-pv-artist { color: var(--ink-2); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zi-pv-btn {
+  flex: none; width: 34px; height: 34px; display: grid; place-items: center;
+  appearance: none; border: 0; border-radius: 50%; padding: 0; cursor: pointer;
+  background: var(--ink); color: #000;
+}
+.zi-pv-btn svg { width: 12px; height: 12px; }
+.zi-pv-btn:disabled { opacity: .35; cursor: default; }
+.zi-pv-bar { position: absolute; left: 10px; right: 10px; bottom: 5px; height: 3px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.zi-pv-bar b { display: block; height: 100%; width: 0; background: var(--ink); transition: width .25s linear; }
+.zi-pv-t { margin: 6px 2px 0; color: var(--ink-2); font-size: 11.5px; }
+.zi-full-btn {
+  flex: none; min-height: 34px; padding: 0 10px; white-space: nowrap;
+  appearance: none; border: 1px solid var(--line); border-radius: 10px; cursor: pointer;
+  background: transparent; color: var(--ink); font: 500 12px/1 Onest, -apple-system, sans-serif;
+}
+.zi-full-btn:hover { background: var(--hover); }
+/* Full song: the smallest player YouTube allows (200 x 200), labelled, with Stop */
+.zi-fullbox { display: flex; align-items: flex-start; gap: 12px; margin-top: 14px; padding: 10px; border-radius: 14px; background: rgba(0, 0, 0, .28); }
+.zi-fullbox .zi-player-youtube { flex: none; width: 200px; height: 200px; margin: 0; border-radius: 10px; }
+.zi-fullbox .zi-player-youtube iframe, .zi-fullbox .zi-yt-mount { width: 200px !important; height: 200px !important; aspect-ratio: auto; }
+.zi-fullbox-meta { padding-top: 2px; gap: 2px; }
+.zi-fullbox-meta .zi-pv-title { white-space: normal; overflow-wrap: anywhere; }
+.zi-stop-btn {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; min-height: 32px; padding: 0 12px;
+  appearance: none; border: 0; border-radius: 10px; cursor: pointer; background: var(--ink); color: #000; font: 600 12.5px/1 Onest, -apple-system, sans-serif;
+}
+.zi-stop-btn svg { width: 10px; height: 10px; }
+.zi-pv-btn:focus-visible, .zi-full-btn:focus-visible, .zi-stop-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .zi-player-note { margin: 8px 2px 0; color: var(--ink-2); font-size: 12px; line-height: 1.4; }
 .zi-player-note + .zi-player-note { margin-top: 4px; }
 .zi-player-warn { color: var(--ink); font-weight: 500; }
@@ -204,6 +246,22 @@ a.zi-hd-title:hover { text-decoration: underline; text-underline-offset: 2px; }
 .zi-list-hd a { color: inherit; text-decoration: none; white-space: nowrap; }
 .zi-list-hd a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
 .zi-sleeves + .zi-list-hd { margin-top: 10px; }
+/* Artist list */
+.zi-artist { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.zi-artist-pic { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex: none; background: #1d1f24; }
+.zi-artist-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.zi-artist-name { font-weight: 600; font-size: 16px; }
+.zi-artist-meta { color: var(--ink-2); font-size: 12.5px; }
+.zi-artist-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.zi-artist-links a { padding: 6px 10px; border-radius: 999px; background: var(--hover); color: var(--ink); text-decoration: none; font-size: 12px; }
+.zi-artist-links a:hover { background: rgba(255, 255, 255, .18); }
+.zi-releases { display: flex; gap: 10px; margin: 12px -2px 2px; padding: 2px; overflow-x: auto; scrollbar-width: none; }
+.zi-releases::-webkit-scrollbar { display: none; }
+.zi-release { flex: none; width: 76px; display: flex; flex-direction: column; gap: 3px; color: inherit; text-decoration: none; }
+.zi-art-rel { width: 76px; height: 76px; border-radius: 10px; }
+.zi-release-t { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zi-release-m { font-size: 11px; color: var(--ink-2); }
+.zi-release:hover .zi-release-t { text-decoration: underline; text-underline-offset: 2px; }
 .zi-row { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px; border-radius: 13px; }
 .zi-row:hover { background: var(--hover); }
 .zi-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; color: inherit; text-decoration: none; }
