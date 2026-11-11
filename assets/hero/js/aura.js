@@ -1,5 +1,6 @@
 /* Music light ("Pulse core"): a soft glow behind the music island, like a TV backlight.
-   It shows only while a visitor hears music, takes its colours from the cover, and throbs gently at the song's tempo.
+   It shows while I am listening (the island says so) and while a visitor hears music, takes its colours from the
+   cover, and throbs gently at the song's tempo.
    A page cannot hear the sound inside YouTube or Spotify players, so the beat is simulated at the song's tempo
    (128 BPM until the island sends one). Motion is kept safe: no flashing, brightness changes slowly.
    The island announces playback with the "zi:playback" event; this file never touches the island itself. */
@@ -181,15 +182,39 @@
   function wake() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } }
   document.addEventListener("visibilitychange", function () { if (!document.hidden) wake(); });
 
+  /* Two reasons to glow: I am listening right now (the island marks itself data-state="playing"),
+     or the visitor hears music on this page ("zi:playback" with playing: true). */
+  var mine = false, heard = false, heardColour = false;
+  function update() {
+    S.playing = mine || heard;
+    if (reduced) cur = target.map(function (x) { return x.slice(); });   /* reduced motion: a still glow, no pulsing */
+    wake();
+  }
   document.addEventListener("zi:playback", function (ev) {
     var d = ev.detail || {}, base = parseColor(d.accent) || parseColor(d.color);
-    if (base) target = paletteFrom(base);
+    if (base) { target = paletteFrom(base); heardColour = true; }
     if (d.playing) setBpm(d.bpm);
-    S.playing = !!d.playing;
-    if (reduced) {
-      /* Reduced motion: a still glow, no pulsing; it fades in and out once with the music. */
-      cur = target.map(function (x) { return x.slice(); });
-    }
-    wake();
+    heard = !!d.playing;
+    if (!heard) heardColour = false;
+    update();
   });
+  function watchIsland(root) {
+    function read() {
+      mine = root.getAttribute("data-state") === "playing";
+      /* While the visitor's own player sets the colours, keep them; otherwise follow the island's cover colour. */
+      if (!heardColour) {
+        var cs = root.style, base = parseColor(cs.getPropertyValue("--art").trim()) || parseColor(cs.getPropertyValue("--zi-tint").trim());
+        if (base) target = paletteFrom(base);
+      }
+      update();
+    }
+    new MutationObserver(read).observe(root, { attributes: true, attributeFilter: ["data-state", "style"] });
+    read();
+  }
+  /* The island script loads deferred, so wait for its root to appear. */
+  (function find(n) {
+    var root = document.querySelector(".zi");
+    if (root) return watchIsland(root);
+    if (n < 60) setTimeout(function () { find(n + 1); }, 500);
+  })(0);
 })();
