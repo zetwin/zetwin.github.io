@@ -74,7 +74,12 @@
 .zi[data-state="idle"] .zi-compact .zi-art { filter: saturate(.55) brightness(.8); }
 
 .zi-compact { display: flex; align-items: center; white-space: nowrap; width: max-content; min-width: 300px; height: 34px; padding: 0 14px 0 9px; gap: 8px; }
-.zi-compact .zi-ttl { max-width: 190px; overflow: hidden; text-overflow: ellipsis; font-weight: 500; font-size: 13px; }
+.zi-compact .zi-ttl { display: flex; min-width: 0; max-width: 236px; overflow: hidden; text-overflow: ellipsis; font-weight: 500; font-size: 13px; }
+/* Only the artist shrinks; the song is cut only when it alone is wider than the notch. */
+.zi-ttl-t, .zi-ttl-a { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.zi-ttl-t { flex: 0 0 auto; max-width: 100%; }
+.zi-ttl-a { flex: 0 1 auto; color: var(--ink-2); font-weight: 400; }
+.zi-ttl-a::before { content: "\00a0·\00a0"; }
 .zi-compact .zi-bars, .zi-compact .zi-ago { margin-left: auto; }
 .zi-compact .zi-bars { height: 14px; }
 .zi-ago { color: var(--ink-2); font-size: 12.5px; }

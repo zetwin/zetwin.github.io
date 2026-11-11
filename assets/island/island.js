@@ -205,7 +205,9 @@
   function compactHtml() {
     var t = shown(), moving = isPlaying() || visitorPlaying();
     if (!t) return NOTE + '<span class="zi-ttl">' + esc(TEXT.music) + "</span>";
-    return art(t, "zi-art-xs") + '<span class="zi-ttl">' + esc(t.title) + "</span>" +
+    /* Song and artist. When space runs out the artist is cut first, then the song. */
+    return art(t, "zi-art-xs") + '<span class="zi-ttl"><span class="zi-ttl-t">' + esc(t.title) + "</span>" +
+      (t.artist ? '<span class="zi-ttl-a">' + esc(t.artist) + "</span>" : "") + "</span>" +
       (moving ? bars() : S.now && S.now.at && t === current() ? '<span class="zi-ago">' + esc(ago(S.now.at, "narrow")) + "</span>" : "");
   }
   /* My music for visitors when I am not listening: every playable song from my playlists. */
