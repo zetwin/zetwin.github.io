@@ -21,6 +21,7 @@
       openIn: "Open in",
       playMine: "Play my music", mineOn: "Playing my music", mineNote: "My playlists, shuffled. Keeps playing while you look around.",
       pause: "Pause", resume: "Resume", mute: "Mute", silentNote: "Playing my song silently. Press play on the notch to hear it.",
+      viaLastfm: "via Last.fm", sameAsMine: "Same song as me", myLast: "My last song", fromLists: "From my playlists", srcFull: "Full song · YouTube",
       previewLabel: "30-second preview, no ads", fullSong: "Full song", playingHere: "Playing here", fullHere: "Full song on YouTube", fullNote: "Full songs play on YouTube and may start with an ad. Its Skip button is in the player.",
       noPreview: "No preview for this song.", playPreview: "Play preview", pausePreview: "Pause preview",
       artist: "Artist", releases: "Releases", Single: "Single", EP: "EP", Album: "Album"
@@ -36,6 +37,7 @@
       openIn: "Відкрити в",
       playMine: "Увімкнути мою музику", mineOn: "Грає моя музика", mineNote: "Мої плейлисти вперемішку. Грають, поки ви гортаєте сторінку.",
       pause: "Пауза", resume: "Продовжити", mute: "Вимкнути звук", silentNote: "Моя пісня грає беззвучно. Натисніть play на острові, щоб почути.",
+      viaLastfm: "через Last.fm", sameAsMine: "Та сама пісня, що в мене", myLast: "Моя остання пісня", fromLists: "З моїх плейлистів", srcFull: "Повна пісня · YouTube",
       previewLabel: "Уривок 30 секунд, без реклами", fullSong: "Повна пісня", playingHere: "Грає тут", fullHere: "Повна пісня на YouTube", fullNote: "Повні пісні грають на YouTube і можуть почати з реклами. Кнопка «Пропустити» є у плеєрі.",
       noPreview: "Для цієї пісні немає уривка.", playPreview: "Слухати уривок", pausePreview: "Пауза",
       artist: "Виконавець", releases: "Релізи", Single: "Сингл", EP: "EP", Album: "Альбом"
@@ -187,6 +189,7 @@
   var NOTE = '<svg class="zi-art zi-art-xs" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="8" fill="#1d1f24"/><path d="M11 17.5V8.5l7-1.5v9" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.3" cy="17.6" r="1.9" fill="#fff"/><circle cx="16.3" cy="16.1" r="1.9" fill="#fff"/></svg>';
   var PLAY = '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 2.2v9.6L11.6 7z" fill="currentColor"/></svg>';
   var STOP = '<svg viewBox="0 0 14 14" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5" fill="currentColor"/></svg>';
+  var CHECK = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.4 6.3l2.4 2.4 4.8-5.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var PAUSE = '<svg viewBox="0 0 14 14" aria-hidden="true"><rect x="3" y="2.5" width="2.8" height="9" rx="1" fill="currentColor"/><rect x="8.2" y="2.5" width="2.8" height="9" rx="1" fill="currentColor"/></svg>';
 
   function art(t, cls) {
@@ -236,7 +239,8 @@
   function statusHtml() {
     if (!isPlaying()) return '<span class="zi-status">' + esc(S.now && S.now.at ? TEXT.lastPlayed + " " + ago(S.now.at) : TEXT.nothing) + "</span>";
     var src = S.now.source;
-    if (!SOURCE[src]) return '<span class="zi-status">' + esc(TEXT.listening) + "</span>";
+    /* Last.fm does not say which app is playing, so say where the song comes from instead of guessing. */
+    if (!SOURCE[src]) return '<span class="zi-status">' + esc(TEXT.listening + " · " + TEXT.viaLastfm) + "</span>";
     var label = el.root && el.root.classList.contains("is-phone") ? TEXT.on : TEXT.listeningOn;
     return '<span class="zi-status">' + GLYPH[src] + esc(label + " " + SOURCE[src]) + "</span>";
   }
@@ -333,8 +337,27 @@
 
   function slot() { return el.full.querySelector(".zi-player-slot"); }
   function note(text, cls) { return text ? '<p class="zi-player-note' + (cls ? " " + cls : "") + '">' + esc(text) + "</p>" : ""; }
+  /* What the visitor hears, from where, and whether it is the song I am on right now. */
+  function matchHtml(t) {
+    var k = trackKey(t), cur = current();
+    if (cur && k === trackKey(cur)) return isPlaying() ? '<span class="zi-match is-same">' + CHECK + esc(TEXT.sameAsMine) + "</span>" : '<span class="zi-match">' + esc(TEXT.myLast) + "</span>";
+    var mine = S.lists.some(function (l) { return l.source !== "artist" && l.tracks.some(function (x) { return trackKey(x) === k; }); });
+    return mine ? '<span class="zi-match">' + esc(TEXT.fromLists) + "</span>" : "";
+  }
+  function srcInner(p) { return matchHtml(p.track) + "<span>" + esc(p.source === "full" ? TEXT.srcFull : TEXT.previewLabel) + "</span>"; }
+  function srcHtml(p) { return '<div class="zi-src">' + srcInner(p) + "</div>"; }
+  function syncHere() {
+    var box = slot(), p = S.playing;
+    if (!p) return;
+    var src = box.querySelector(".zi-src");
+    if (src) src.innerHTML = srcInner(p);
+    /* The full-song player is reused between songs, so its title follows the song. */
+    var fb = box.querySelector(".zi-fullbox-meta");
+    if (fb) { fb.querySelector(".zi-pv-title").textContent = p.track.title; fb.querySelector(".zi-pv-artist").textContent = p.track.artist; }
+  }
   function setNotes() {
     var box = slot(), p = S.playing;
+    syncHere();
     box.querySelectorAll(".zi-player-note").forEach(function (n) { n.remove(); });
     if (!p) return;
     var html = "";
@@ -595,7 +618,7 @@
     box.innerHTML = '<div class="zi-pv" role="group" aria-label="' + esc(TEXT.playingHere) + '">' + art(p.track, "zi-art-pv") +
       '<div class="zi-pv-meta"><span class="zi-here">' + esc(TEXT.playingHere) + '</span><span class="zi-pv-title">' + esc(p.track.title) + '</span><span class="zi-pv-artist">' + esc(p.track.artist) + "</span></div>" +
       '<button class="zi-pv-btn" type="button" data-pv></button>' + full +
-      '<div class="zi-pv-bar" aria-hidden="true"><b></b></div></div><p class="zi-pv-t">' + esc(TEXT.previewLabel) + "</p>";
+      '<div class="zi-pv-bar" aria-hidden="true"><b></b></div></div>' + srcHtml(p);
     syncPv();
     size();
   }
@@ -665,7 +688,7 @@
         watchStart();
       } else {
         box.innerHTML = '<div class="zi-fullbox" role="group" aria-label="' + esc(TEXT.fullHere) + '"><div class="zi-player zi-player-youtube"><div class="zi-yt-mount"></div></div>' +
-          '<div class="zi-fullbox-meta"><span class="zi-here">' + esc(TEXT.fullHere) + '</span><span class="zi-pv-title">' + esc(t.title) + '</span><span class="zi-pv-artist">' + esc(t.artist) + "</span>" +
+          '<div class="zi-fullbox-meta"><span class="zi-here">' + esc(TEXT.playingHere) + '</span><span class="zi-pv-title">' + esc(t.title) + '</span><span class="zi-pv-artist">' + esc(t.artist) + "</span>" + srcHtml(S.playing) +
           '<button class="zi-stop-btn" type="button" data-stop>' + STOP + "<span>" + esc(TEXT.stop) + "</span></button></div></div>";
         var mount = box.querySelector(".zi-yt-mount");
         var createYT = function (YT) {
