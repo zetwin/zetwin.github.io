@@ -757,6 +757,9 @@
     clearTimeout(yt.hintTimer);
     yt.hintTimer = setTimeout(function () {
       if (!yt.player || !S.playing || typeof yt.player.getPlayerState !== "function") return;
+      /* The full-song player is in view with its own play and Skip ad buttons, and YouTube reports
+         "not started" (-1) during its ads, so a warning here would be wrong. */
+      if (S.playing.source === "full") return;
       var st = yt.player.getPlayerState();
       if (st !== 1 && st !== 3) {
         S.playing.blocked = true;
