@@ -79,6 +79,26 @@
 .zi-compact .zi-bars { height: 14px; }
 .zi-ago { color: var(--ink-2); font-size: 12.5px; }
 
+/* One-tap play on the closed notch: listen with me, or play my music in the background. */
+.zi-quick {
+  position: absolute; z-index: 4; right: 7px; top: 50%; transform: translateY(-50%);
+  width: 24px; height: 24px; display: grid; place-items: center;
+  appearance: none; border: 0; border-radius: 6px; padding: 0; cursor: pointer;
+  background: transparent; color: #fff;
+  transition: color .18s ease, opacity .2s ease, transform .2s var(--zi-open);
+}
+.zi-quick[hidden] { display: none; }
+/* Thumb-sized: full notch height, 44px wide. */
+.zi-quick::before { content: ""; position: absolute; inset: -5px -7px -5px -13px; }
+.zi-quick svg { width: 14px; height: 14px; }
+.zi-quick:hover { color: var(--art); }
+.zi-quick:active { transform: translateY(-50%) scale(.86); }
+.zi-quick[aria-pressed="true"] { color: var(--art); }
+.zi-quick:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.zi[data-view="full"] .zi-quick { opacity: 0; pointer-events: none; }
+.zi.has-quick .zi-compact { padding-right: 40px; }
+.zi.is-listening .zi-compact .zi-art { filter: none; }
+
 .zi-bars { display: inline-flex; align-items: center; gap: 2px; height: 16px; flex: none; color: var(--art); transition: color .5s ease; }
 .zi-bars i { display: block; width: 3px; height: 100%; border-radius: 2px; background: currentColor; animation: zi-bar 1s ease-in-out infinite alternate; }
 .zi-bars i:nth-child(1) { animation-duration: .83s; animation-delay: -.2s; }
