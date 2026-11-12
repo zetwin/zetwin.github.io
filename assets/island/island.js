@@ -391,7 +391,7 @@
   }
   function pausePlayer() {
     if (!S.playing) return;
-    if (S.playing.source === "preview") { if (au) au.pause(); }
+    if (S.playing.source === "preview") { if (au) { hushSpare(); au.pause(); } }
     else { try { if (yt.player && yt.player.pauseVideo) yt.player.pauseVideo(); else if (sp.ctrl) sp.ctrl.pause(); } catch (e) {} }
     setPaused(true);
   }
@@ -504,10 +504,14 @@
     else stopPlayer();
   }
 
-  /* ---------- Ad-free previews in one <audio> element ----------
+  /* ---------- Ad-free previews in two <audio> elements ----------
      iOS only allows sound that starts inside a tap. Every tap calls unlock() first, which plays a silent clip on the
-     same element right away; the real preview URL arrives a moment later and plays on the already-unlocked element. */
-  var au = null, previewCache = {}, missRun = 0;
+     elements right away; the real preview URL arrives a moment later and plays on an already-unlocked element.
+     Two elements let one song fade out while the next fades in. Where the browser ignores volume (iPhone, iPad),
+     only one element is used and songs change directly, as before. */
+  var au = null, players = [], previewCache = {}, missRun = 0;
+  var FADE_MS = 1500;
+  var canFade = (function () { try { var t = new Audio(); t.volume = 0.5; return Math.abs(t.volume - 0.5) < 0.01; } catch (e) { return false; } })();
   var SILENT = (function () {
     var n = 800, b = new Uint8Array(44 + n), v = new DataView(b.buffer), i;
     var w = function (o, str) { for (i = 0; i < str.length; i++) b[o + i] = str.charCodeAt(i); };
@@ -517,48 +521,96 @@
     var bin = ""; for (i = 0; i < b.length; i++) bin += String.fromCharCode(b[i]);
     return "data:audio/wav;base64," + btoa(bin);
   })();
-  function audioEl() {
-    if (au) return au;
-    au = new Audio();
-    au.preload = "auto";
-    au.setAttribute("playsinline", "");
-    au.addEventListener("playing", function () {
-      if (!S.playing || S.playing.source !== "preview" || au.src === SILENT) return;
+  /* Only the current element speaks for the player; the one fading out is ignored. */
+  function newAudio() {
+    var a = new Audio();
+    a.preload = "auto";
+    a.setAttribute("playsinline", "");
+    a.addEventListener("playing", function () {
+      if (a !== au || !S.playing || S.playing.source !== "preview" || a.src === SILENT) return;
+      if (a._fadeIn) { a._fadeIn = false; ramp(a, 1, FADE_MS); }
       missRun = 0;
       S.playing.blocked = false;
       if (S.playing.paused) setPaused(false); else emit(true);
       setNotes(); syncPv(); refreshCompact();
-      measureBpm(S.playing.track, au.src);
+      measureBpm(S.playing.track, a.src);
     });
-    au.addEventListener("pause", function () {
-      if (S.switching || au.ended || au.src === SILENT || !S.playing || S.playing.source !== "preview") return;
+    a.addEventListener("pause", function () {
+      if (a !== au || S.switching || a.ended || a.src === SILENT || !S.playing || S.playing.source !== "preview") return;
       setPaused(true); syncPv();
     });
-    au.addEventListener("ended", function () { if (au.src !== SILENT && S.playing && S.playing.source === "preview") onEnded(); });
-    au.addEventListener("error", function () {
-      if (au.src === SILENT || !au.getAttribute("src") || !S.playing || S.playing.source !== "preview") return;
+    a.addEventListener("ended", function () { if (a === au && !a._adv && a.src !== SILENT && S.playing && S.playing.source === "preview") onEnded(); });
+    a.addEventListener("error", function () {
+      if (a !== au || a.src === SILENT || !a.getAttribute("src") || !S.playing || S.playing.source !== "preview") return;
       noPreview[trackKey(S.playing.track)] = 1;
       skipMissing();
     });
-    au.addEventListener("timeupdate", tickPreview);
+    a.addEventListener("timeupdate", function () {
+      if (a !== au) return;
+      tickPreview();
+      /* Start the next song while this one still has FADE_MS to go, so the two overlap. */
+      if (canFade && !a._adv && audible(a) && a.duration > 6 && a.duration - a.currentTime <= FADE_MS / 1000 && S.playing && S.playing.source === "preview" && !S.playing.paused) {
+        a._adv = true;
+        onEnded();
+      }
+    });
+    return a;
+  }
+  function audioEl() {
+    if (au) return au;
+    players = canFade ? [newAudio(), newAudio()] : [newAudio()];
+    au = players[0];
     return au;
   }
-  function unlock() {
-    var a = audioEl();
-    if (!a.paused && a.src !== SILENT) return;
-    try { S.switching = true; a.muted = true; a.src = SILENT; var pr = a.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
-    S.switching = false;
+  function spare() { return players.length > 1 ? (players[0] === au ? players[1] : players[0]) : null; }
+  function audible(a) { return !!a && !a.paused && !a.muted && !!a.getAttribute("src") && a.src !== SILENT; }
+  /* Equal-power volume ramp: to 1 rises like sin, to 0 falls like cos, so the sum sounds level. Timer-based, so it
+     still finishes in a background tab. */
+  function ramp(a, to, ms, done) {
+    clearInterval(a._ramp);
+    var t0 = Date.now(), from = a.volume;
+    a._ramp = setInterval(function () {
+      var k = Math.min(1, (Date.now() - t0) / ms);
+      var v = to > from ? from + (1 - from) * Math.sin(k * Math.PI / 2) : from * Math.cos(k * Math.PI / 2);
+      try { a.volume = Math.max(0, Math.min(1, v)); } catch (e) {}
+      if (k >= 1) { clearInterval(a._ramp); a._ramp = null; if (done) done(); }
+    }, 40);
   }
+  function hush(a) {
+    if (!a) return;
+    clearInterval(a._ramp); a._ramp = null; a._fadeIn = false; a._adv = false;
+    var mine = a === au;
+    if (mine) S.switching = true;
+    try { a.pause(); a.removeAttribute("src"); a.load(); a.volume = 1; } catch (e) {}
+    if (mine) S.switching = false;
+  }
+  function unlock() {
+    audioEl();
+    players.forEach(function (a) {
+      if (!a.paused && a.src !== SILENT) return;
+      try { if (a === au) S.switching = true; a.muted = true; a.src = SILENT; var pr = a.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {}
+      S.switching = false;
+    });
+  }
+  /* Stop the preview. A song that is heard fades out briefly instead of cutting off. */
   function stopAudio() {
     if (!au) return;
-    S.switching = true;
-    try { au.pause(); au.removeAttribute("src"); au.load(); } catch (e) {}
-    S.switching = false;
+    var other = spare();
+    hush(other);
+    if (other && audible(au)) {
+      var old = au, left = old.duration ? (old.duration - old.currentTime) * 1000 : 0;
+      au = other;
+      ramp(old, 0, old._adv && left > 0 ? Math.min(FADE_MS, left) : 400, function () { hush(old); });
+      return;
+    }
+    hush(au);
   }
+  /* Pausing silences the song that was fading out too. */
+  function hushSpare() { hush(spare()); }
   function playAudio() {
-    var pr = au.play();
+    var a = au, pr = a.play();
     if (pr && pr.catch) pr.catch(function () {
-      if (!S.playing || S.playing.source !== "preview") return;
+      if (a !== au || !S.playing || S.playing.source !== "preview") return;
       /* Autoplay refused: show our own play button in the panel instead of staying silent. */
       S.playing.blocked = true; S.playing.paused = true;
       setNotes(); syncPv(); refreshCompact();
@@ -598,8 +650,21 @@
     previewOf(t).then(function (url) {
       if (token !== S.token || !S.playing) return;
       if (!url) { noPreview[trackKey(t)] = 1; skipMissing(); return; }
-      var a = audioEl();
+      var a = audioEl(), other = spare();
+      /* A song is still heard: fade it out on its own element while the new one fades in on the other. */
+      if (other && !S.playing.muted && audible(a)) {
+        var old = a;
+        hush(other);
+        au = a = other;
+        ramp(old, 0, FADE_MS, function () { hush(old); });
+        a.volume = 0;
+        a._fadeIn = true;
+      } else {
+        clearInterval(a._ramp); a._ramp = null; a._fadeIn = false;
+        try { a.volume = 1; } catch (e) {}
+      }
       S.switching = true;
+      a._adv = false;
       a.muted = !!S.playing.muted;
       a.src = url;
       S.switching = false;
