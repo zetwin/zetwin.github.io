@@ -24,7 +24,9 @@
       viaLastfm: "via Last.fm", sameAsMine: "Same song as me", myLast: "My last song", fromLists: "From my playlists", srcFull: "Full song · YouTube",
       previewLabel: "30-second preview, no ads", fullSong: "Full song", playingHere: "Playing here", fullHere: "Full song on YouTube", fullNote: "Full songs play on YouTube and may start with an ad. Its Skip button is in the player.",
       noPreview: "No preview for this song.", playPreview: "Play preview", pausePreview: "Pause preview",
-      artist: "Artist", releases: "Releases", Single: "Single", EP: "EP", Album: "Album"
+      artist: "Artist", releases: "Releases", Single: "Single", EP: "EP", Album: "Album",
+      top: "My top", topAlbums: "Albums", topArtists: "Artists", topSongs: "Songs", plays: "plays", playAll: "Play", topNote: "From everything I play on Spotify and YouTube Music, counted by Last.fm.",
+      periods: { "1month": "Month", "6month": "6 months", "12month": "Year", overall: "All time" }
     },
     uk: {
       listeningOn: "Слухаю в", on: "У", listening: "Слухаю зараз", lastPlayed: "Востаннє грало",
@@ -40,7 +42,9 @@
       viaLastfm: "через Last.fm", sameAsMine: "Та сама пісня, що в мене", myLast: "Моя остання пісня", fromLists: "З моїх плейлистів", srcFull: "Повна пісня · YouTube",
       previewLabel: "Уривок 30 секунд, без реклами", fullSong: "Повна пісня", playingHere: "Грає тут", fullHere: "Повна пісня на YouTube", fullNote: "Повні пісні грають на YouTube і можуть почати з реклами. Кнопка «Пропустити» є у плеєрі.",
       noPreview: "Для цієї пісні немає уривка.", playPreview: "Слухати уривок", pausePreview: "Пауза",
-      artist: "Виконавець", releases: "Релізи", Single: "Сингл", EP: "EP", Album: "Альбом"
+      artist: "Виконавець", releases: "Релізи", Single: "Сингл", EP: "EP", Album: "Альбом",
+      top: "Мій топ", topAlbums: "Альбоми", topArtists: "Виконавці", topSongs: "Пісні", plays: "прослух.", playAll: "Слухати", topNote: "Усе, що я слухаю в Spotify і YouTube Music, за підрахунком Last.fm.",
+      periods: { "1month": "Місяць", "6month": "6 місяців", "12month": "Рік", overall: "Весь час" }
     }
   }[LANG];
   var SOURCE = { spotify: "Spotify", ytm: "YouTube Music" };
@@ -285,6 +289,24 @@
       (out.length ? '<div class="zi-artist-links">' + out.join("") + "</div>" : "") +
       (rel ? '<div class="zi-releases" role="list" aria-label="' + esc(TEXT.releases) + '">' + rel + "</div>" : "");
   }
+  /* "My top": my most played albums and artists as covers (tap to hear them), then my most played songs. */
+  var TOP_PERIODS = ["1month", "6month", "12month", "overall"];
+  function topHtml(l) {
+    var per = '<div class="zi-periods" role="group" aria-label="' + esc(TEXT.top) + '">' + TOP_PERIODS.map(function (p) {
+      return '<button type="button" class="zi-period" data-period="' + p + '" aria-pressed="' + (p === S.topPeriod) + '">' + esc(TEXT.periods[p]) + "</button>";
+    }).join("") + "</div>";
+    var tile = function (kind, x, i) {
+      var key = kind + ":" + i, on = !!(S.queue && S.queue.key === key && S.playing);
+      return '<button type="button" class="zi-tile zi-tile-' + kind + '" data-col="' + key + '" aria-pressed="' + on + '" aria-label="' + esc(TEXT.playAll + ": " + (x.title || x.name) + (x.artist ? ", " + x.artist : "")) + '">' +
+        '<span class="zi-tile-art">' + (safeUrl(x.art) ? '<img src="' + esc(x.art) + '" alt="" loading="lazy">' : "") + '<span class="zi-tile-play" aria-hidden="true">' + (on ? STOP : PLAY) + "</span></span>" +
+        '<span class="zi-release-t">' + esc(x.title || x.name) + '</span><span class="zi-release-m">' + esc((x.artist ? x.artist + " · " : "") + x.plays + " " + TEXT.plays) + "</span></button>";
+    };
+    var shelf = function (label, kind, items) {
+      return items && items.length ? '<div class="zi-shelf-h">' + esc(label) + '</div><div class="zi-releases zi-shelf" role="list">' + items.map(function (x, i) { return tile(kind, x, i); }).join("") + "</div>" : "";
+    };
+    return per + (l.loading ? '<div class="zi-shelf-h">…</div>' : shelf(TEXT.topAlbums, "album", l.albums) + shelf(TEXT.topArtists, "artist", l.artists) +
+      (l.tracks.length ? '<div class="zi-shelf-h">' + esc(TEXT.topSongs) + "</div>" : ""));
+  }
   function rowsHtml(list, li) {
     return list.tracks.map(function (t, i) {
       return '<div class="zi-row">' + art(t, "zi-art-sm") +
@@ -383,6 +405,7 @@
     destroyPlayers();
     stopAudio();
     S.playing = null;
+    S.queue = null;
     S.alongMine = "";
     S.shuffle = null;
     slot().innerHTML = "";
@@ -457,6 +480,12 @@
     return null;
   }
   function nextInList(t) {
+    /* An album or artist from "My top" plays through in order, then stops. */
+    if (S.queue) {
+      var q = S.queue.tracks, k = trackKey(t), qi;
+      for (qi = 0; qi < q.length; qi++) if (trackKey(q[qi]) === k) break;
+      if (qi < q.length) { for (qi++; qi < q.length; qi++) if (previewable(q[qi])) return { track: q[qi], ref: "q:" + qi }; return null; }
+    }
     var at = locate(t);
     if (!at) at = S.lists.length && S.lists[0].tracks.length ? { li: 0, i: -1 } : null;
     if (!at) return null;
@@ -641,6 +670,7 @@
   /* mode: "along" (my song), "shuffle", "list". single: the visitor picked exactly this song. */
   function playPreview(t, ref, mode, muted, single) {
     destroyPlayers();
+    if (String(ref).indexOf("q:") !== 0) S.queue = null;
     S.playing = { ref: ref, track: t, along: mode === "along", mode: mode, muted: !!muted, paused: false, blocked: false, source: "preview", single: !!single, missing: false };
     if (mode !== "shuffle" && mode !== "along") S.shuffle = null;
     if (mode === "along" && trackKey(t) === trackKey(current())) S.alongMine = trackKey(t);
@@ -860,6 +890,11 @@
     }, 3000);
   }
   function syncButtons() {
+    el.full.querySelectorAll("[data-col]").forEach(function (b) {
+      var on = !!(S.queue && S.playing && S.queue.key === b.getAttribute("data-col"));
+      b.setAttribute("aria-pressed", String(on));
+      var g = b.querySelector(".zi-tile-play"); if (g) g.innerHTML = on ? STOP : PLAY;
+    });
     el.full.querySelectorAll("[data-play]").forEach(function (b) {
       var on = !!(S.playing && !S.playing.along && S.playing.ref === b.getAttribute("data-play"));
       b.setAttribute("aria-pressed", String(on));
@@ -902,7 +937,7 @@
     }).join("") + "</div>" : "";
     var list = lists[S.tab];
     var listUrl = list && safeUrl(list.url);
-    var head = list && list.kind === "artist" ? artistHtml(list) : list && (lists.length === 1 || listUrl) ? '<div class="zi-list-hd">' + (lists.length === 1 ? '<span class="zi-list-name"><span class="zi-fan zi-fan-sm" aria-hidden="true">' + list.tracks.slice(0, 3).map(function (t) { return art(t, "zi-art-fan"); }).join("") + "</span>" + esc(listName(list)) + "</span>" : "<span></span>") +
+    var head = list && list.kind === "top" ? topHtml(list) : list && list.kind === "artist" ? artistHtml(list) : list && (lists.length === 1 || listUrl) ? '<div class="zi-list-hd">' + (lists.length === 1 ? '<span class="zi-list-name"><span class="zi-fan zi-fan-sm" aria-hidden="true">' + list.tracks.slice(0, 3).map(function (t) { return art(t, "zi-art-fan"); }).join("") + "</span>" + esc(listName(list)) + "</span>" : "<span></span>") +
       (listUrl ? '<a href="' + esc(listUrl) + '" target="_blank" rel="noopener">' + esc(TEXT.openIn + " " + (SOURCE[list.source] || "")) + "</a>" : "") + "</div>" : "";
     return tabs + head + (list ? '<div class="zi-list" role="tabpanel">' + rowsHtml(list, S.lists.indexOf(list)) + "</div>" : "") + footHtml();
   }
@@ -1020,6 +1055,10 @@
       return;
     }
     if (e.target.closest(".zi-close")) { setView("compact"); el.hit.focus({ preventScroll: true }); return; }
+    var per = e.target.closest("[data-period]");
+    if (per) { loadTops(per.getAttribute("data-period")); return; }
+    var col = e.target.closest("[data-col]");
+    if (col) { playCollection(col.getAttribute("data-col")); schedule(); return; }
     var tab = e.target.closest("[data-tab]");
     if (tab) {
       S.tab = +tab.getAttribute("data-tab");
@@ -1114,10 +1153,44 @@
     playPreview(t, "now", "along", true, false);
     schedule();
   }
+  /* "My top" sits after my playlists and artists. Each period is fetched once. */
+  var topCache = {};
+  function topList() { for (var i = 0; i < S.lists.length; i++) if (S.lists[i].kind === "top") return S.lists[i]; return null; }
+  function loadTops(period) {
+    S.topPeriod = period;
+    var l = topList();
+    if (l) { l.loading = !topCache[period]; paint(false); }
+    var p = topCache[period] || (topCache[period] = getJSON("/tops?period=" + period).catch(function () { delete topCache[period]; return null; }));
+    return p.then(function (d) {
+      if (S.topPeriod !== period) return;
+      var cur = topList(), tracks = (d && Array.isArray(d.tracks) ? d.tracks : []);
+      var next = { id: "top", kind: "top", name: TEXT.top, source: "lastfm", url: d && d.url, tracks: tracks, albums: (d && d.albums) || [], artists: (d && d.artists) || [], loading: false };
+      if (!tracks.length && !next.albums.length && !cur) return;
+      if (cur) S.lists[S.lists.indexOf(cur)] = next; else S.lists.push(next);
+      if (!el.root.hidden) paint(false);
+    });
+  }
+  function playCollection(key) {
+    var l = topList(), p = key.split(":"), x = l && l[p[0] === "album" ? "albums" : "artists"][+p[1]];
+    if (!x) return;
+    if (S.queue && S.queue.key === key && S.playing) { stopPlayer(); return; }
+    unlock();
+    var q = "/collection?type=" + p[0] + "&artist=" + encodeURIComponent(x.artist || x.name) + (p[0] === "album" ? "&title=" + encodeURIComponent(x.title) : "");
+    getJSON(q).then(function (d) {
+      var tracks = ((d && d.tracks) || []).filter(function (t) { return t && t.title && safeUrl(t.preview); });
+      if (!tracks.length) return;
+      S.queue = { key: key, tracks: tracks };
+      playPreview(tracks[0], "q:0", "list", false, false);
+      syncButtons();
+    }).catch(function () {});
+  }
   function loadLists() {
     return getJSON("/lists").then(function (d) {
       if (!d || !Array.isArray(d.lists)) return;
+      var top = topList();
       S.lists = d.lists.filter(function (l) { return l && Array.isArray(l.tracks); });
+      if (top) S.lists.push(top);
+      if (!top) loadTops(S.topPeriod || "12month");
       S.profile = d.profile || {};
       if (!el.root.hidden) paint(false);
     }).catch(function () {});
