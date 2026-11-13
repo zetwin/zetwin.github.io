@@ -61,14 +61,20 @@
   var V = (H.video = { ids: null, index: 0, total: 0, players: [null, null], active: 0, busy: false, started: false });
   var FADE = reduced ? 10 : 1800;
 
-  function makePlayer(slot, id, autoplay) {
+  /* A scene is { id, start?, end? }: a slice of a YouTube video, in seconds. */
+  function makePlayer(slot, sc, autoplay) {
     frames[slot].innerHTML = '<div id="yt' + slot + '"></div>';
+    var vars = { autoplay: autoplay ? 1 : 0, mute: 1, controls: 0, rel: 0, playsinline: 1, iv_load_policy: 3, disablekb: 1, fs: 0, modestbranding: 1 };
+    if (sc.start) vars.start = sc.start;
+    if (sc.end) vars.end = sc.end;
     return new YT.Player("yt" + slot, {
-      width: "100%", height: "100%", videoId: id,
-      playerVars: { autoplay: autoplay ? 1 : 0, mute: 1, controls: 0, rel: 0, playsinline: 1, iv_load_policy: 3, disablekb: 1, fs: 0, modestbranding: 1 },
+      width: "100%", height: "100%", videoId: sc.id,
+      playerVars: vars,
       events: {
         onReady: function (e) { e.target.mute(); if (autoplay) e.target.playVideo(); },
-        onStateChange: function (e) { onState(slot, e); }
+        onStateChange: function (e) { onState(slot, e); },
+        /* A video that was deleted or can no longer be embedded is skipped, never shown as a black screen. */
+        onError: function () { onBroken(slot); }
       }
     });
   }
@@ -92,13 +98,25 @@
       setTimeout(crossfade, reduced ? 0 : 700);
     }
   }
+  function onBroken(slot) {
+    /* Only the scene on screen, or the one being loaded next, counts; the idle second player is ignored. */
+    var showing = slot === V.active && !V.busy, loading = slot !== V.active && V.busy;
+    if (!V.ids || !(showing || loading)) return;
+    if (V.total < 2) { bg.classList.add("poster-on"); return; }
+    V.ids.splice(V.index, 1);
+    V.total = V.ids.length;
+    V.index = (V.index - 1 + V.total) % V.total;
+    if (loading) { V.busy = false; clearTimeout(safety); }
+    go(1);
+  }
   var safety;
   function go(dir) {
     if (!V.ids || V.busy) return;
     V.busy = true;
     V.index = (V.index + dir + V.total) % V.total;
     var next = 1 - V.active;
-    V.players[next].loadVideoById(V.ids[V.index]);
+    var sc = V.ids[V.index];
+    V.players[next].loadVideoById({ videoId: sc.id, startSeconds: sc.start || 0, endSeconds: sc.end });
     clearTimeout(safety);
     safety = setTimeout(function () { if (V.busy) crossfade(); }, 7000);
   }
@@ -116,17 +134,34 @@
     }, FADE);
   }
   H.nextScene = function () { go(1); };
-  /* Start the next scene a moment before this one ends, so the cut is a dissolve. */
+  /* Start the next scene a moment before this one ends, so the cut is a dissolve.
+     Long videos end with YouTube's end screen (subscribe button, channel links) over the last 20 seconds: leave before it. */
   setInterval(function () {
     var p = V.players[V.active];
     if (!p || !p.getDuration || V.busy || document.hidden) return;
     try {
-      var d = p.getDuration(), c = p.getCurrentTime();
-      if (d > 8 && d - c < 3) go(1);
+      var d = p.getDuration(), c = p.getCurrentTime(), sc = V.ids[V.index] || {};
+      var left = (sc.end || d) - c;
+      if (d > 8 && left < (sc.end ? 3 : d > 45 ? 22 : 3)) go(1);
     } catch (e) {}
   }, 500);
 
+  function begin(scenes) {
+    V.ids = scenes;
+    /* Shuffle, and shuffle again if two slices of the same film would play back to back. */
+    var clash = function () { for (var a = 1; a < V.ids.length; a++) if (V.ids[a].id === V.ids[a - 1].id) return true; return false; };
+    var tries = 0;
+    do {
+      for (var i = V.ids.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = V.ids[i]; V.ids[i] = V.ids[j]; V.ids[j] = x; }
+    } while (clash() && ++tries < 30);
+    V.total = V.ids.length;
+    V.players[0] = makePlayer(0, V.ids[0], true);
+    V.players[1] = makePlayer(1, V.ids[1 % V.total], false);
+  }
   window.onYouTubeIframeAPIReady = function () {
+    /* A fixed list of scenes in content.js wins; otherwise the YouTube playlist is read. */
+    var fixed = (D.scenes || []).filter(function (x) { return x && /^[\w-]{11}$/.test(x.id); });
+    if (fixed.length) { begin(fixed.map(function (x) { return { id: x.id, start: x.start, end: x.end }; })); return; }
     /* Read the playlist once with a throwaway player, then run two single-video players (no YouTube buttons on top). */
     frames[0].innerHTML = '<div id="ytlist"></div>';
     var reader = new YT.Player("ytlist", {
@@ -138,12 +173,8 @@
           (function wait() {
             var list = reader.getPlaylist && reader.getPlaylist();
             if (list && list.length) {
-              V.ids = list.slice();
-              for (var i = V.ids.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = V.ids[i]; V.ids[i] = V.ids[j]; V.ids[j] = x; }
-              V.total = V.ids.length;
               try { reader.destroy(); } catch (e) {}
-              V.players[0] = makePlayer(0, V.ids[0], true);
-              V.players[1] = makePlayer(1, V.ids[1 % V.total], false);
+              begin(list.map(function (id) { return { id: id }; }));
             } else if (++tries < 24) setTimeout(wait, 250);
             else bg.classList.add("poster-on");
           })();

@@ -18,6 +18,32 @@ window.HERO_DATA = {
   "avatar": "/assets/images/zetwin-ava.png"
  },
  "playlist": "PLDZjMr0wZw_72PLFoBfVJm9Cad69vyDoB",
+ "scenes": [
+  { "id": "WNbOnbEJxDc", "place": "Dubai, animated city" },
+  { "id": "YsC9cIdRPs0", "place": "Clouds" },
+  { "id": "ewOmkL_h2_Q", "place": "Dubai at sunset" },
+  { "id": "IuAeVYSk5Bc", "place": "Clouds" },
+  { "id": "CbG-08ZeTLY", "place": "Dubai" },
+  { "id": "gdDaEddQ_AE", "place": "Clouds" },
+  { "id": "EKZ3Z8Ahxmw", "place": "Dubai" },
+  { "id": "bWdXsPYQExM", "place": "Tunnel" },
+  { "id": "VBscF179po4", "place": "Clouds" },
+  { "id": "5UFkQjyqM9c", "place": "Dubai" },
+  { "id": "D4yiqhxGAg8", "place": "Dubai" },
+  { "id": "t8ECJvqkyy8", "place": "Dubai" },
+  { "id": "CH1gq4ntW-E", "start": 15, "end": 60, "place": "Cyprus coast" },
+  { "id": "CH1gq4ntW-E", "start": 100, "end": 145, "place": "Cyprus coast" },
+  { "id": "8zGmjYDHZxI", "start": 70, "end": 115, "place": "Limassol" },
+  { "id": "HiD1ica3vfg", "start": 150, "end": 195, "place": "Cyprus" },
+  { "id": "HiD1ica3vfg", "start": 380, "end": 425, "place": "Limassol coast" },
+  { "id": "jGyPaxvHH30", "start": 8, "end": 38, "place": "Cape Greco" },
+  { "id": "io40bNwucLs", "start": 90, "end": 135, "place": "Dubai at night" },
+  { "id": "2dEWPwVaUqM", "start": 120, "end": 165, "place": "Dubai at night" },
+  { "id": "IdejM6wCkxA", "start": 60, "end": 105, "place": "Dubai by drone" },
+  { "id": "ZV70-WYRNnU", "start": 200, "end": 245, "place": "Dubai" },
+  { "id": "ZV70-WYRNnU", "start": 500, "end": 545, "place": "Dubai skyline" },
+  { "id": "f94eQciLAu8", "start": 10, "end": 60, "place": "Dubai desert roads" }
+ ],
  "projects": [
   {
    "name": "FoodUp",

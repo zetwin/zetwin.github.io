@@ -159,40 +159,36 @@
   var RENDER = { work: renderWork, skills: renderSkills, contact: renderContact };
 
   /* ---------- Open and close, App Store style: the button grows into the page.
-     Only the frame animates (size, corners, colour); the content is pinned at its final size and fades in, so nothing reflows. ---------- */
-  function box(el, r, radius, bg) {
-    el.style.left = r.left + "px"; el.style.top = r.top + "px";
-    el.style.width = r.width + "px"; el.style.height = r.height + "px";
-    el.style.right = "auto"; el.style.bottom = "auto"; el.style.margin = "0"; el.style.translate = "none";
-    el.style.borderRadius = radius;
-    if (bg) el.style.backgroundColor = bg;
-  }
+     The page is laid out once at its final size and revealed with a clip-path that grows from the button.
+     Only the clip, the opacity and the colour animate, so the browser never lays the page out again mid-move
+     and the motion stays smooth while the videos play behind it. ---------- */
   function clearBox(el) { ["left", "top", "width", "height", "right", "bottom", "margin", "translate", "borderRadius", "backgroundColor", "transition"].forEach(function (k) { el.style[k] = ""; }); }
-  var morphTimer;
+  function inset(r, frame, radius) {
+    var px = function (v) { return Math.round(v * 10) / 10 + "px"; };
+    return "inset(" + px(r.top - frame.top) + " " + px(frame.right - r.right) + " " + px(frame.bottom - r.bottom) + " " + px(r.left - frame.left) + " round " + radius + ")";
+  }
+  function stopMorph(page) {
+    clearTimeout(page._morph);
+    page.getAnimations().forEach(function (a) { if (a.id === "blend" || a.id === "clip" || a.id === "tint") a.cancel(); });
+  }
   function morph(page, fromRect, toRect, r0, r1, bg0, bg1, sp, done, fade, source) {
-    var inner = page.querySelector(".pg-in");
-    var pin = toRect.width >= fromRect.width ? toRect : fromRect;
-    inner.style.width = pin.width + "px"; inner.style.height = pin.height + "px";
+    stopMorph(page);
+    /* Opening, the page already sits at its final place; closing, it stays where it is. Either way that box is the frame. */
+    var frame = fade === "in" ? toRect : fromRect;
+    var d = H.reduced ? 1 : sp.d;
+    var ease = H.reduced ? "linear" : getComputedStyle(document.documentElement).getPropertyValue(sp === H.springs.pop ? "--pop" : "--snap").trim() || "ease";
     page.classList.add("morphing");
-    page.style.transition = "none";
-    box(page, fromRect, r0, bg0);
-    void page.offsetWidth;
-    var tr = sp.d + "ms " + (H.reduced ? "linear" : getComputedStyle(document.documentElement).getPropertyValue(sp === H.springs.pop ? "--pop" : "--snap"));
-    page.style.transition = ["left", "top", "width", "height", "border-radius"].map(function (p) { return p + " " + tr; }).join(", ") + ", background-color " + Math.round(sp.d * 0.6) + "ms ease";
-    box(page, toRect, r1, bg1);
-    /* Blend with the button instead of cutting: opening, the button fades as the frame appears;
-       closing, the frame fades out over the last part while the button fades back in under it. */
-    page.getAnimations().forEach(function (a) { if (a.id === "blend") a.cancel(); });
-    if (!H.reduced && page.animate) {
-      var a = page.animate(fade === "in" ? [{ opacity: 0 }, { opacity: 1, offset: 0.25 }, { opacity: 1 }] : [{ opacity: 1 }, { opacity: 1, offset: 0.4 }, { opacity: 0 }],
-        { duration: sp.d, easing: "linear", fill: "forwards" });
-      a.id = "blend";
+    if (page.animate) {
+      page.animate([{ clipPath: inset(fromRect, frame, r0) }, { clipPath: inset(toRect, frame, r1) }], { duration: d, easing: ease, fill: "forwards" }).id = "clip";
+      page.animate([{ backgroundColor: bg0 }, { backgroundColor: bg1 }], { duration: Math.round(d * 0.6), easing: "ease", fill: "forwards" }).id = "tint";
+      /* Blend with the button instead of cutting: opening, the button fades as the frame appears;
+         closing, the frame fades out over the last part while the button fades back in under it. */
+      if (!H.reduced) page.animate(fade === "in" ? [{ opacity: 0 }, { opacity: 1, offset: 0.25 }, { opacity: 1 }] : [{ opacity: 1 }, { opacity: 1, offset: 0.4 }, { opacity: 0 }],
+        { duration: d, easing: "linear", fill: "forwards" }).id = "blend";
     }
     if (source && fade === "out") setTimeout(function () { source.classList.remove("is-source"); }, H.reduced ? 0 : sp.d * 0.35);
-    clearTimeout(morphTimer);
-    morphTimer = setTimeout(function () {
+    page._morph = setTimeout(function () {
       page.classList.remove("morphing");
-      inner.style.width = inner.style.height = "";
       done();
     }, H.reduced ? 10 : sp.d + 30);
   }
@@ -212,7 +208,7 @@
     ui.querySelectorAll("[data-page]").forEach(function (b) { b.setAttribute("aria-expanded", String(b.getAttribute("data-page") === id)); });
     page.classList.add("is-on");
     morph(page, startRect, finalRect, fs.borderRadius, r1, "rgb(28, 31, 38)", bg1, H.springs.pop, function () {
-      if (cur === id) { clearBox(page); page.getAnimations().forEach(function (a) { if (a.id === "blend") a.cancel(); }); }
+      if (cur === id) stopMorph(page);
     }, "in", from);
     setTimeout(function () { var title = page.querySelector(".pg-title"); if (title && cur === id) title.focus({ preventScroll: true }); }, 60);
   }
@@ -228,7 +224,7 @@
     morph(page, startRect, endRect, r0, getComputedStyle(from).borderRadius, cs.backgroundColor, "rgb(28, 31, 38)", H.springs.snap, function () {
       if (page.classList.contains("is-on")) return;
       page.hidden = true; page.innerHTML = ""; clearBox(page);
-      page.getAnimations().forEach(function (a) { if (a.id === "blend") a.cancel(); });
+      stopMorph(page);
       from.classList.remove("is-source");
       if (!swap) from.focus({ preventScroll: true });
     }, "out", from);
