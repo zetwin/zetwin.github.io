@@ -182,19 +182,40 @@
       }
     });
   };
-  (function () {
+  /* Light mode: with Data Saver, a 2G connection, 2 GB of memory or less, or 2 CPU cores or fewer, the page keeps the still
+     poster and never loads YouTube (two players are the heaviest part of the page). The "next scene" button still starts it. */
+  var conn = navigator.connection || {};
+  H.light = !!(conn.saveData || /2g$/.test(conn.effectiveType || "") || (navigator.deviceMemory && navigator.deviceMemory <= 2) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2));
+  var videoAsked = false;
+  function startVideo() {
+    if (videoAsked) return;
+    videoAsked = true;
     var s = document.createElement("script");
     s.src = "https://www.youtube.com/iframe_api";
     s.onerror = function () { bg.classList.add("poster-on"); };
     document.head.appendChild(s);
     setTimeout(function () { if (!V.started) bg.classList.add("poster-on"); }, 7000);
-    ["pointerdown", "keydown", "touchstart"].forEach(function (ev) {
-      document.addEventListener(ev, function () {
-        var p = V.players[V.active];
-        if (p && p.playVideo && !V.started) { p.mute(); p.playVideo(); }
-      }, { once: true, passive: true });
-    });
-  })();
+  }
+  var nextScene = H.nextScene;
+  H.nextScene = function () { if (!videoAsked) { bg.classList.add("poster-on"); startVideo(); } else nextScene(); };
+  if (H.light) bg.classList.add("poster-on");
+  else {
+    /* YouTube waits until the page itself has loaded and the browser is idle, so the name and buttons come first. */
+    var later = function () { (window.requestIdleCallback || function (f) { setTimeout(f, 200); })(startVideo, { timeout: 1500 }); };
+    if (document.readyState === "complete") later(); else window.addEventListener("load", later, { once: true });
+  }
+  ["pointerdown", "keydown", "touchstart"].forEach(function (ev) {
+    document.addEventListener(ev, function () {
+      var p = V.players[V.active];
+      if (p && p.playVideo && !V.started) { p.mute(); p.playVideo(); }
+    }, { once: true, passive: true });
+  });
+  /* A hidden tab does not need to stream or decode video. */
+  document.addEventListener("visibilitychange", function () {
+    var p = V.players[V.active];
+    if (!p || !p.pauseVideo || !V.started) return;
+    try { if (document.hidden) p.pauseVideo(); else { p.mute(); p.playVideo(); } } catch (e) {}
+  });
 
   /* ---------- Page state: the video dims and steps back while a page is open ---------- */
   H.setOpen = function (on) { document.body.classList.toggle("is-open", !!on); };

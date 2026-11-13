@@ -1,14 +1,12 @@
 {
-    "name": "Zetwin - WebDev",
-    "short_name": "Zetwin - WebDev",
+    "name": "Zetwin, Lead Software Engineer",
+    "short_name": "Zetwin",
+    "start_url": "/",
     "icons": [
-        {
-            "src": "favicons/android-chrome-144x144.png",
-            "sizes": "144x144",
-            "type": "image/png"
-        }
+        { "src": "/assets/favicons/android-chrome-144x144.png", "sizes": "144x144", "type": "image/png" },
+        { "src": "/assets/favicons/apple-touch-icon-152x152.png", "sizes": "152x152", "type": "image/png" }
     ],
-    "theme_color": "#ffffff",
-    "background_color": "#ffffff",
+    "theme_color": "#05070a",
+    "background_color": "#05070a",
     "display": "standalone"
 }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://zetwin.github.io/</loc>
+    <lastmod>2026-11-13</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zetwin.github.io/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://zetwin.github.io/ua/"/>
+  </url>
+  <url>
+    <loc>https://zetwin.github.io/ua/</loc>
+    <lastmod>2026-11-13</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://zetwin.github.io/"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://zetwin.github.io/ua/"/>
+  </url>
+</urlset>

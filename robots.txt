@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://zetwin.github.io/sitemap.xml
